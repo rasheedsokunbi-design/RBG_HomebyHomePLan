@@ -1,0 +1,3173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Home by Home Plan — Intelligence Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root{
+  --green:#1B5E45;--green-mid:#2E8B67;--green-light:#8AB4A0;--green-pale:#E8F4EE;
+  --amber:#F9C74F;--amber-dark:#BA7517;--amber-pale:#FFF8E8;
+  --red:#C95C3A;--red-dark:#9B2226;--red-pale:#F8D7DA;
+  --white:#fff;--off-white:#F8F7F4;--border:#E8E4DC;
+  --text:#2C2C2C;--text-muted:#7A7570;
+  --nav-h:52px;--sidebar-w:220px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--off-white);color:var(--text);font-size:14px}
+/* Nav */
+nav{position:fixed;top:0;left:0;right:0;height:var(--nav-h);background:var(--green);display:flex;align-items:center;padding:0 20px;gap:16px;z-index:200}
+.nav-logo{font-size:16px;font-weight:600;color:#fff;letter-spacing:-0.02em}.nav-logo span{color:var(--amber)}
+.nav-badge{padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;background:rgba(255,255,255,0.15);color:#fff}
+/* Sidebar */
+aside{position:fixed;top:var(--nav-h);left:0;bottom:0;width:var(--sidebar-w);background:var(--white);border-right:1px solid var(--border);overflow-y:auto;z-index:100}
+.sidebar-section{font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;padding:12px 20px 6px}
+.sidebar-item{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;font-size:13px;color:var(--text-muted);border-left:3px solid transparent;transition:all 0.15s}
+.sidebar-item:hover{background:var(--green-pale);color:var(--green)}
+.sidebar-item.active{background:var(--green-pale);color:var(--green);border-left-color:var(--green);font-weight:500}
+.sidebar-num{width:20px;height:20px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0}
+.sidebar-item.active .sidebar-num{background:var(--green);color:#fff}
+/* Main */
+.main{margin-left:var(--sidebar-w);margin-top:var(--nav-h);padding:20px;min-height:calc(100vh - var(--nav-h))}
+.page{display:none}.page.active{display:block}
+/* Header */
+.page-hdr{margin-bottom:14px}
+.page-hdr h1{font-size:22px;font-weight:600;color:var(--green);letter-spacing:-0.02em}
+.page-hdr p{font-size:12px;color:var(--text-muted);margin-top:3px}
+.page-hdr-row{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px}
+/* Filter bar */
+.filter-bar{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.filter-label{font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-right:2px}
+.fpill{padding:4px 12px;border-radius:20px;font-size:11px;cursor:pointer;border:1px solid var(--green);background:var(--white);color:var(--green);transition:all 0.15s}
+.fpill.on,.fpill:hover{background:var(--green);color:#fff}
+/* Cards + grid */
+.card{background:var(--white);border-radius:10px;border:1px solid var(--border);padding:14px}
+.card-title{font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:10px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.g-map{display:grid;grid-template-columns:1.2fr 1fr;gap:12px;margin-bottom:12px}
+/* KPIs */
+.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:12px}
+.kpi{background:var(--white);border-radius:10px;border:1px solid var(--border);padding:12px 14px;border-left:3px solid var(--green)}
+.kpi-label{font-size:9px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px}
+.kpi-val{font-size:26px;font-weight:600;color:var(--green);line-height:1;letter-spacing:-0.02em}
+.kpi-sub{font-size:10px;color:var(--text-muted);margin-top:3px}
+/* Insight box */
+.insight{background:var(--green-pale);border-left:3px solid var(--green);border-radius:0 8px 8px 0;padding:9px 14px;margin-bottom:12px}
+.insight strong{font-size:10px;color:var(--green);display:block;margin-bottom:2px;text-transform:uppercase;letter-spacing:0.05em}
+.insight p{font-size:12px;color:var(--green);line-height:1.6}
+/* Table */
+.tbl{width:100%;border-collapse:collapse;font-size:11px}
+.tbl th{background:var(--green);color:#fff;padding:7px 10px;text-align:left;font-weight:500;font-size:10px;white-space:nowrap}
+.tbl td{padding:6px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+.tbl tr:nth-child(even) td{background:var(--off-white)}
+.tbl tr:hover td{background:var(--green-pale);cursor:pointer}
+.tbl-wrap{overflow-x:auto;max-height:340px;overflow-y:auto}
+/* Pills */
+.pill{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600}
+.pill-g{background:#D4EDDA;color:#155724}
+.pill-a{background:#FFF3CD;color:#856404}
+.pill-r{background:#F8D7DA;color:#721C24}
+/* Map */
+.map-container{height:320px;border-radius:10px;overflow:hidden;border:1px solid var(--border)}
+/* Component selector */
+.comp-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:12px}
+.comp-btn{padding:6px 10px;border-radius:8px;font-size:11px;cursor:pointer;border:1px solid var(--border);background:var(--white);color:var(--text-muted);transition:all 0.15s;text-align:center;line-height:1.3}
+.comp-btn:hover{border-color:var(--green);color:var(--green)}
+.comp-btn.active{background:var(--green);color:#fff;border-color:var(--green)}
+/* Methodology box */
+.methodology{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px}
+.methodology summary{font-size:12px;font-weight:600;color:var(--green);cursor:pointer;list-style:none;display:flex;align-items:center;gap:6px}
+.methodology summary::before{content:'▶';font-size:9px;transition:transform 0.2s}
+details[open] .methodology summary::before{transform:rotate(90deg)}
+.methodology-body{margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.meth-item{font-size:11px;color:var(--text-muted);line-height:1.5}
+.meth-item strong{color:var(--text);display:block;margin-bottom:2px}
+/* Drill-down panel */
+.drill-panel{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:14px;display:none}
+.drill-panel.open{display:block}
+.drill-title{font-size:13px;font-weight:600;color:var(--green);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.close-btn{font-size:11px;color:var(--text-muted);cursor:pointer;padding:3px 8px;border:1px solid var(--border);border-radius:6px}
+.close-btn:hover{background:var(--off-white)}
+/* Stacked bar */
+.bar-stack{display:flex;height:8px;border-radius:4px;overflow:hidden;margin-top:3px}
+.bar-r{background:var(--red)}
+.bar-a{background:var(--amber)}
+.bar-g{background:var(--green-light)}
+/* Search */
+.search-box{width:100%;padding:7px 10px;border-radius:8px;border:1px solid var(--border);font-size:11px;margin-bottom:8px;background:var(--off-white);color:var(--text);font-family:'DM Sans'}
+.search-box:focus{outline:none;border-color:var(--green)}
+/* EPC badge */
+.epc{display:inline-block;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:700;color:#fff}
+.epc-A{background:#00A651}.epc-B{background:#4CB748}.epc-C{background:#BDD62E}
+.epc-D{background:#FFD500;color:#333}.epc-E{background:#F7941D}.epc-F{background:#ED1C24}.epc-G{background:#9B1C1C}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">Home by Home <span>Plan</span></div>
+  <div class="nav-badge">Royal Borough of Greenwich</div>
+  <div class="nav-badge" style="margin-left:auto">Intelligence Portal · 2023–2026</div>
+</nav>
+
+<aside>
+  <div class="sidebar-section">Pages</div>
+  <div class="sidebar-item active" onclick="showPage('overview',this)">
+    <div class="sidebar-num">1</div>Overview
+  </div>
+  <div class="sidebar-item" onclick="showPage('damp',this)">
+    <div class="sidebar-num">2</div>Damp &amp; Mould
+  </div>
+  <div class="sidebar-item" onclick="showPage('stockcondition',this)">
+    <div class="sidebar-num">3</div>Stock Condition
+  </div>
+  <div class="sidebar-item" onclick="showPage('blocks',this)">
+    <div class="sidebar-num">4</div>Block &amp; Compliance
+  </div>
+  <div class="sidebar-item" onclick="showPage('retrofit',this)">
+    <div class="sidebar-num">5</div>Retrofit &amp; Sustainability
+  </div>
+  <div class="sidebar-item" onclick="showPage('decent',this)">
+    <div class="sidebar-num">6</div>Decent Homes
+  </div>
+  <div class="sidebar-item" onclick="showPage('programme',this)">
+    <div class="sidebar-num">7</div>Programme Builder
+  </div>
+</aside>
+
+<main class="main">
+
+<!-- ═══════════════════════════ PAGE 1: OVERVIEW ═══════════════════════════ -->
+<div class="page active" id="page-overview">
+  <div class="page-hdr">
+    <div class="page-hdr-row">
+      <div>
+        <h1>Housing stock overview</h1>
+        <p>Director-level view of stock priorities · Royal Borough of Greenwich · 2023–2026</p>
+      </div>
+      <div class="filter-bar" style="margin:0">
+        <span class="filter-label">View by</span>
+        <span class="fpill on" id="ov-f-ag"   onclick="ovFilter('ag',this)">Asset Group</span>
+        <span class="fpill" id="ov-f-block"   onclick="ovFilter('block',this)">Block</span>
+        <span class="fpill" id="ov-f-ward"    onclick="ovFilter('ward',this)">Ward</span>
+      </div>
+    </div>
+  </div>
+
+  <details class="methodology" style="margin-bottom:12px">
+    <summary>Details &mdash; how this page works</summary>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px;font-size:11px">
+      <div><div style="font-weight:700;color:var(--green-dark);margin-bottom:4px">Repair Cost Breakdown</div>
+      <div style="color:var(--text-muted)">Shows reactive maintenance spend by asset group across all categories for April 2023 to March 2026. Costs from 14_Total_Cost_Now in the repairs export. Duplicate rows (same property, description, date and cost but different SOR codes) are deduplicated before aggregation.</div></div>
+      <div><div style="font-weight:700;color:var(--green-dark);margin-bottom:4px">Category Definitions</div>
+      <div style="color:var(--text-muted)">Categories assigned by GPT-5.6 Luna (97% coverage) with keyword fallback (3%). Damp/Leak includes all damp, mould, condensation and leak work orders. Categories: Roof, Door/Window, Kitchen, Bathroom, Electrical, Heating, Damp/Leak, Other.</div></div>
+    </div>
+  </details>
+
+
+  <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:14px" id="ov-kpis"></div>
+
+  <div class="g-map" style="margin-bottom:12px">
+    <div class="card" style="padding:0;overflow:hidden">
+      <div id="ov-map" style="height:360px;border-radius:10px"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div class="card" style="flex:1;overflow:hidden">
+        <div class="card-title">Worst asset groups — all priorities</div>
+        <input class="search-box" placeholder="Search asset group…" oninput="ovSearch(this.value)">
+        <div class="tbl-wrap" style="max-height:280px" id="ov-worst-table"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:12px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+      <div class="card-title" style="margin:0">% addresses in each asset group with repair priorities</div>
+      <div class="filter-bar" style="margin:0;gap:4px" id="ov-comp-pills">
+        <span class="fpill on" onclick="ovSelectComp('all',this)">All</span>
+        <span class="fpill" onclick="ovSelectComp('Roof',this)">Roof</span>
+        <span class="fpill" onclick="ovSelectComp('Door',this)">Doors</span>
+        <span class="fpill" onclick="ovSelectComp('Window',this)">Windows</span>
+        <span class="fpill" onclick="ovSelectComp('Kitchen',this)">Kitchen</span>
+        <span class="fpill" onclick="ovSelectComp('Bathroom',this)">Bathroom</span>
+        <span class="fpill" onclick="ovSelectComp('Damp_Mould',this)">Damp &amp; Mould</span>
+      </div>
+    </div>
+    <div id="ov-priority-bars" style="max-height:440px;overflow-y:auto"></div>
+    <div style="display:flex;gap:14px;align-items:center;margin-top:10px;flex-wrap:wrap" id="ov-bar-legend"></div>
+  </div>
+
+
+
+  <!-- Cost breakdown table -->
+  <div class="card" style="margin-bottom:14px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div>
+        <div class="card-title" style="margin:0">Repair Cost Breakdown by Asset Group</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px">3-year reactive maintenance spend · April 2023 – March 2026 · all categories</div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <input class="search-box" style="width:200px;margin:0" placeholder="Search asset group…"
+               oninput="ovCostSearch(this.value)" id="ov-cost-search">
+        <select id="ov-cost-ward" onchange="renderOvCostTable()"
+                style="padding:5px 8px;border-radius:6px;border:1px solid var(--border);font-size:11px">
+          <option value="">All wards</option>
+        </select>
+      </div>
+    </div>
+    <div class="tbl-wrap" style="max-height:500px" id="ov-cost-table"></div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+      <div class="card-title" style="margin:0">Repair volumes by financial year</div>
+      <div class="filter-bar" style="margin:0;gap:4px" id="ov-fy-pills">
+        <span class="fpill on" onclick="ovFyFilter('all',this)">All</span>
+        <span class="fpill" onclick="ovFyFilter('roof',this)">Roof</span>
+        <span class="fpill" onclick="ovFyFilter('door',this)">Doors</span>
+        <span class="fpill" onclick="ovFyFilter('window',this)">Windows</span>
+        <span class="fpill" onclick="ovFyFilter('kitchen',this)">Kitchen</span>
+        <span class="fpill" onclick="ovFyFilter('bathroom',this)">Bathroom</span>
+        <span class="fpill" onclick="ovFyFilter('damp_mould',this)">Damp &amp; Mould</span>
+      </div>
+    </div>
+    <div id="ov-fy-chart"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ PAGE 2: DAMP ═══════════════════════════ -->
+<div class="page" id="page-damp">
+  <div class="page-hdr">
+    <div class="page-hdr-row">
+      <div>
+        <h1>Damp &amp; mould assessment</h1>
+        <p>Asset group risk ranking based on repair history, stock condition surveys and surveyor assessments</p>
+      </div>
+      <div class="filter-bar" style="margin:0">
+        <span class="filter-label">Filter by</span>
+        <span class="fpill on" id="dm-f-all"   onclick="dampFilter('all',this)">All</span>
+        <span class="fpill"    id="dm-f-block"  onclick="dampFilter('block',this)">Blocks only</span>
+        <span class="fpill"    id="dm-f-ward"   onclick="dampFilter('ward',this)">Ward</span>
+        <select id="dm-ward-sel" onchange="dampFilter('ward-sel',null)" style="display:none;padding:4px 8px;border-radius:6px;border:1px solid var(--green);font-size:11px;color:var(--green);cursor:pointer"></select>
+      </div>
+    </div>
+  </div>
+
+  <details style="margin-bottom:12px">
+    <div class="methodology">
+      <summary>Methodology — how damp risk is scored</summary>
+      <div class="methodology-body">
+        <div class="meth-item"><strong>🔴 Red (&ge;40% of properties)</strong>40% or more of properties in the asset group have had at least one damp or mould work order raised in the last 3 years (Apr 2023–Mar 2026).</div>
+        <div class="meth-item"><strong>🟡 Amber (20–39%)</strong>Between 20% and 39% of properties have had at least one damp or mould work order in the same period.</div>
+        <div class="meth-item"><strong>🟢 Green (&lt;20%)</strong>Fewer than 20% of properties have had a damp or mould work order recorded.</div>
+        <div class="meth-item"><strong>Supporting signals (shown for context)</strong>% with 2+ repairs (recurrent issue), stock condition survey damp flag, surveyor-assessed severity (Severe/Moderate), loft insulation and CWI replacement dates.</div>
+      </div>
+    </div>
+  </details>
+
+
+
+  <div class="kpi-row" id="dm-kpis"></div>
+
+  <!-- Filter pills -->
+  <div class="filter-row" style="margin-bottom:10px">
+    <span class="filter-label">Show:</span>
+    <button class="pill-btn active" onclick="dmFilterPill('all',this)">All</button>
+    <button class="pill-btn" onclick="dmFilterPill('red',this)">Red RAG only</button>
+    <button class="pill-btn" onclick="dmFilterPill('amber',this)">Amber RAG only</button>
+    <button class="pill-btn" onclick="dmFilterPill('leaks',this)">Has leaks</button>
+    <button class="pill-btn" onclick="dmFilterPill('both',this)">Leaks + Damp</button>
+  </div>
+
+  <div class="g-map">
+    <div class="card" style="padding:0;overflow:hidden">
+      <div id="dm-map" class="map-container" style="min-height:320px"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div class="card" style="flex:1;display:flex;flex-direction:column">
+        <div class="card-title">Asset groups by damp risk — ranked</div>
+        <input class="search-box" placeholder="Search asset group…" oninput="dampSearch(this.value)">
+        <div class="tbl-wrap" id="dm-table" style="flex:1;max-height:280px;overflow-y:auto"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="drill-panel" id="dm-drill">
+    <div class="drill-title">
+      <span id="dm-drill-title">Asset group detail</span>
+      <span class="close-btn" onclick="closeDampDrill()">✕ Close</span>
+    </div>
+    <div class="g2" style="margin-bottom:12px">
+      <div>
+        <div class="card-title">Damp risk factors</div>
+        <div id="dm-drill-factors"></div>
+      </div>
+      <div>
+        <div class="card-title">Stock condition — damp-linked components</div>
+        <div class="tbl-wrap" id="dm-drill-sc"></div>
+      <div id="dm-drill-summary" style="margin-top:12px"></div>
+      </div>
+    </div>
+    <div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div class="card-title" style="margin:0">Properties in this asset group</div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <input class="search-box" style="width:180px;margin:0" placeholder="Search address…" oninput="dmPropSearch(this.value)" id="dm-prop-search">
+          <select id="dm-prop-filter" onchange="dmPropFilter()" style="padding:5px 8px;border-radius:6px;border:1px solid var(--border);font-size:11px;color:var(--text)">
+            <option value="all">All properties</option>
+            <option value="repairs">Has damp repairs</option>
+            <option value="red">RAG Red only</option>
+          </select>
+        </div>
+      </div>
+      <div class="tbl-wrap" style="max-height:300px" id="dm-prop-table"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ PAGE 4: STOCK CONDITION ═══════════════════════ -->
+<div class="page" id="page-stockcondition">
+  <div class="page-hdr">
+    <div class="page-hdr-row">
+      <div>
+        <h1>Stock condition programme</h1>
+        <p>Survey completion tracking · element replacement years · consultant allocation · click any row to see full element detail</p>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+        <div class="filter-bar" style="margin:0">
+          <span class="filter-label">Survey status</span>
+          <span class="fpill on" onclick="scFilter('status','all',this)">All</span>
+          <span class="fpill" onclick="scFilter('status','Current',this)">Surveyed</span>
+          <span class="fpill" onclick="scFilter('status','Partial',this)">Partial</span>
+          <span class="fpill" onclick="scFilter('status','Overdue',this)">Overdue</span>
+          <span class="fpill" onclick="scFilter('status','Not surveyed',this)">Not surveyed</span>
+        </div>
+        <div class="filter-bar" style="margin:0">
+          <span class="filter-label">Consultant</span>
+          <span class="fpill on" onclick="scFilter('cons','all',this)">All</span>
+          <span class="fpill" onclick="scFilter('cons','FFT',this)">FFT</span>
+          <span class="fpill" onclick="scFilter('cons','Potter Raper',this)">Potter Raper</span>
+          <span class="fpill" onclick="scFilter('cons','Martin Arnold',this)">Martin Arnold</span>
+          <span class="fpill" onclick="scFilter('cons','Savills',this)">Savills</span>
+        </div>
+        <div class="filter-bar" style="margin:0">
+          <span class="filter-label">Elements due</span>
+          <span class="fpill on" onclick="scFilter('elem','all',this)">All</span>
+          <span class="fpill" onclick="scFilter('elem','bathroom_due',this)">Bathroom</span>
+          <span class="fpill" onclick="scFilter('elem','kitchen_due',this)">Kitchen</span>
+          <span class="fpill" onclick="scFilter('elem','roof_due',this)">Roof</span>
+          <span class="fpill" onclick="scFilter('elem','heating_due',this)">Heating</span>
+          <span class="fpill" onclick="scFilter('elem','electrical_due',this)">Electrical</span>
+          <span class="fpill" onclick="scFilter('elem','windows_due',this)">Windows/Doors</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <details class="methodology" style="margin-bottom:12px">
+    <summary>Details &mdash; how this page works</summary>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px;font-size:11px">
+      <div><div style="font-weight:700;color:var(--green-dark);margin-bottom:4px">Survey Status Definitions</div>
+      <div style="color:var(--text-muted)"><b>Current:</b> last survey 2022 or later. <b>Partial:</b> 2019-2021. <b>Overdue:</b> 2018 or earlier. <b>Not surveyed:</b> no Keystone REP records found. Properties not surveyed recently will have unreliable Year Due dates.</div></div>
+      <div><div style="font-weight:700;color:var(--green-dark);margin-bottom:4px">Consultant Attribution</div>
+      <div style="color:var(--text-muted)">Surveys attributed to: Savills, Potter Raper, Martin Arnold, FFT, and Internal/Other based on the Surveyor field in Keystone REP.</div></div>
+      <div><div style="font-weight:700;color:var(--green-dark);margin-bottom:4px">Component Year Due</div>
+      <div style="color:var(--text-muted)">Year Due is the scheduled replacement year from Keystone REP. Red = due before 2026, Amber = 2026-2030, Green = after 2030. Multiple records per property use the earliest Year Due.</div></div>
+      <div><div style="font-weight:700;color:var(--green-dark);margin-bottom:4px">Coverage Gaps</div>
+      <div style="color:var(--text-muted)">Not all properties have been surveyed for all components. Counts show only properties with a valid Year Due date recorded in Keystone REP.</div></div>
+    </div>
+  </details>
+
+
+  <div class="kpi-row" id="sc-kpis"></div>
+
+  <div class="g3" style="margin-bottom:12px">
+    <!-- Survey completion donut + year dist -->
+    <div class="card">
+      <div class="card-title">Survey completion — all asset groups</div>
+      <div style="display:flex;gap:16px;align-items:center;margin-bottom:14px">
+        <div style="position:relative;width:90px;height:90px;flex-shrink:0">
+          <canvas id="sc-donut" width="90" height="90"></canvas>
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column">
+            <div id="sc-donut-pct" style="font-size:16px;font-weight:700;color:var(--green)"></div>
+            <div style="font-size:9px;color:var(--text-muted)">surveyed</div>
+          </div>
+        </div>
+        <div id="sc-donut-legend" style="font-size:11px;display:flex;flex-direction:column;gap:5px"></div>
+      </div>
+      <div class="card-title" style="margin-top:8px">Survey year distribution</div>
+      <div id="sc-year-bars"></div>
+    </div>
+
+    <!-- Consultant cards -->
+    <div class="card">
+      <div class="card-title">Consultant allocation — survey coverage</div>
+      <div id="sc-consultant-cards" style="display:flex;flex-direction:column;gap:8px"></div>
+    </div>
+
+    <!-- Elements flagged -->
+    <div class="card">
+      <div class="card-title">Elements flagged for replacement — next 5 years</div>
+      <div id="sc-elem-bars" style="display:flex;flex-direction:column;gap:8px"></div>
+      <div class="card-title" style="margin-top:14px">Replacement year horizon — all elements</div>
+      <div id="sc-horizon-bars" style="display:flex;gap:6px;align-items:flex-end;height:80px;margin-top:4px"></div>
+    </div>
+  </div>
+
+  <!-- Asset group tracker table -->
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div class="card-title" style="margin-bottom:0">Asset group survey tracker — click any row to see element replacement years</div>
+      <input class="search-box" placeholder="Search asset group…" oninput="scSearch(this.value)" style="width:220px;margin-bottom:0">
+    </div>
+    <div class="tbl-wrap" id="sc-table"></div>
+  </div>
+
+  <!-- Drill-down panel -->
+  <div class="drill-panel" id="sc-drill" style="margin-top:12px">
+    <div class="drill-title">
+      <span id="sc-drill-title">Element replacement detail</span>
+      <span class="close-btn" onclick="document.getElementById('sc-drill').classList.remove('open')">✕ Close</span>
+    </div>
+    <div class="g2">
+      <div>
+        <div class="card-title">Survey & consultant detail</div>
+        <div id="sc-drill-meta"></div>
+      </div>
+      <div>
+        <div class="card-title">Element replacement years</div>
+        <div id="sc-drill-elements"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ PAGE 5: BLOCK & COMPLIANCE ═══════════════════════════ -->
+<div class="page" id="page-blocks">
+  <div class="page-hdr">
+    <div class="page-hdr-row">
+      <div>
+        <div class="page-title">Block &amp; Compliance</div>
+        <div class="page-sub">Communal component priorities · BSR registered high-rise blocks · Royal Borough of Greenwich · 2023–2026</div>
+      </div>
+    </div>
+  </div>
+
+  <details class="methodology" style="margin-bottom:12px">
+    <summary>Details &mdash; how this page works</summary>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px;font-size:11px">
+      <div><div style="font-weight:700;color:var(--green-dark);margin-bottom:4px">Block Priority Score</div>
+      <div style="color:var(--text-muted)">Each block scores 1 point per communal component category with Year Due &le;2030. Categories: Access &amp; Security, Roof &amp; Structure, Balconies &amp; Rails, Communal Heating, Electrical, Fire Safety, Windows. Maximum 7.</div></div>
+      <div><div style="font-weight:700;color:var(--green-dark);margin-bottom:4px">BSR Registration</div>
+      <div style="color:var(--text-muted)">BSR registration applies to high-rise buildings (18m+ or 7+ storeys). RBG has 70 BSR-registered blocks marked with the building icon. Hover to see the full HRB number.</div></div>
+      <div><div style="font-weight:700;color:var(--green-dark);margin-bottom:4px">Communal vs Programme Components</div>
+      <div style="color:var(--text-muted)">Genuine communal components are always included. Property-level components are included only where &ge;80% of properties in the block share an identical Year Due, indicating a coordinated block programme. Labelled Programme.</div></div>
+      <div><div style="font-weight:700;color:var(--green-dark);margin-bottom:4px">Statutory Compliance</div>
+      <div style="color:var(--text-muted)">The six compliance cards (Fire Risk, Legionella, Asbestos, Gas Safety, EICR, Lifts) show Awaiting data until statutory compliance records are provided. These will be populated when data is available.</div></div>
+    </div>
+  </details>
+
+
+  <!-- KPI strip -->
+  <div class="kpi-row" id="blk-kpis"></div>
+
+
+
+  <!-- Filter pills -->
+  <div class="filter-row" style="margin-bottom:10px">
+    <span class="filter-label">FILTER:</span>
+    <button class="pill-btn active" onclick="blkFilter('all',this)">All Blocks</button>
+    <button class="pill-btn" onclick="blkFilter('high',this)">High-rise only</button>
+    <button class="pill-btn" onclick="blkFilter('registered',this)">BSR Registered</button>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+      <label style="font-size:11px;color:var(--text-muted)">Ward:</label>
+      <select id="blk-ward-sel" onchange="blkWardFilter()" style="padding:5px 8px;border-radius:6px;border:1px solid var(--border);font-size:11px">
+        <option value="">All wards</option>
+      </select>
+      <input class="search-box" style="width:180px;margin:0" placeholder="Search block…" oninput="blkSearch(this.value)" id="blk-search">
+    </div>
+  </div>
+
+  <!-- Map + table grid -->
+  <div class="g-map" style="margin-bottom:12px">
+    <div class="card" style="padding:0;overflow:hidden">
+      <div id="blk-map" class="map-container"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div class="card" style="flex:1;display:flex;flex-direction:column">
+        <div class="card-title">Blocks by priority — ranked</div>
+        <div class="tbl-wrap" id="blk-table" style="flex:1;max-height:280px;overflow-y:auto"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Drill-down panel -->
+  <div class="drill-panel" id="blk-drill">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div id="blk-drill-title" style="font-size:15px;font-weight:700;color:var(--green-dark)"></div>
+      <button onclick="closeBlkDrill()" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 12px;cursor:pointer;font-size:11px">✕ Close</button>
+    </div>
+    <!-- Meta row -->
+    <div id="blk-drill-meta" style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px;font-size:11px;color:var(--text-muted)"></div>
+    <!-- Component table -->
+    <div class="card-title" style="margin-bottom:8px">Communal Components — Year Due &amp; Survey Detail</div>
+    <div class="tbl-wrap" style="max-height:320px;margin-bottom:14px" id="blk-drill-comps"></div>
+    <!-- Statutory Compliance section -->
+    <div class="card-title" style="margin-bottom:8px;margin-top:14px">Statutory Compliance</div>
+    <div id="blk-drill-compliance" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px"></div>
+
+    <!-- Properties strip -->
+    <div class="card-title" style="margin-bottom:8px">Properties in this block</div>
+    <div class="tbl-wrap" style="max-height:220px" id="blk-drill-props"></div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════ PAGE 3: RETROFIT ═══════════════════════════ -->
+<div class="page" id="page-retrofit">
+  <div class="page-hdr">
+    <div class="page-hdr-row">
+      <div>
+        <div class="page-title">Retrofit &amp; Sustainability</div>
+        <div class="page-sub">EPC performance · component renewal priorities · damp risk · programme planning tool · Royal Borough of Greenwich · 2023–2026</div>
+      </div>
+    </div>
+  </div>
+
+  <details class="methodology" style="margin-bottom:12px">
+    <summary>Details &mdash; how this page works</summary>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px;font-size:11px">
+      <div><div style="font-weight:700;color:var(--green-dark);margin-bottom:4px">Priority Score (out of 6)</div>
+      <div style="color:var(--text-muted)">Each asset group scores 1 point per triggered indicator: Windows due &le;2030 (&ge;20% of properties), Front Door (&ge;20%), Loft Insulation (&ge;20%), CWI (&ge;5%), EWI (&ge;5%), and EPC D or below (&ge;30%). Higher score = stronger retrofit case.</div></div>
+      <div><div style="font-weight:700;color:var(--green-dark);margin-bottom:4px">EPC &amp; SAP Data</div>
+      <div style="color:var(--text-muted)">EPC ratings (A-G) and SAP scores come from the stock master file. SAP is the Standard Assessment Procedure energy efficiency score. Properties rated F or G are fuel poverty risk and fail Decent Homes Criterion 4.</div></div>
+      <div><div style="font-weight:700;color:var(--green-dark);margin-bottom:4px">Component Renewal Dates</div>
+      <div style="color:var(--text-muted)">Year Due dates come from Keystone REP stock condition surveys. The % columns show the proportion of properties where that component is due for replacement by 2030. Only surveyed properties are included.</div></div>
+      <div><div style="font-weight:700;color:var(--green-dark);margin-bottom:4px">Property Drill-Down &amp; Export</div>
+      <div style="color:var(--text-muted)">Click any asset group row to see individual properties. Tick checkboxes to build a programme shortlist and use Copy List to export as CSV.</div></div>
+    </div>
+  </details>
+
+
+  <!-- KPIs -->
+  <div class="kpi-row" id="rt-kpis"></div>
+
+  <!-- Filters -->
+  <div class="filter-row" style="margin-bottom:10px">
+    <span class="filter-label">FILTER:</span>
+    <button class="pill-btn active" onclick="rtFilter('all',this)">All</button>
+    <button class="pill-btn" onclick="rtFilter('poor-epc',this)">EPC D or below</button>
+    <button class="pill-btn" onclick="rtFilter('windows',this)">Windows ≤2030</button>
+    <button class="pill-btn" onclick="rtFilter('loft',this)">Loft Ins ≤2030</button>
+    <button class="pill-btn" onclick="rtFilter('damp',this)">Damp risk</button>
+    <div style="margin-left:auto;display:flex;gap:6px;align-items:center">
+      <label style="font-size:11px;color:var(--text-muted)">Ward:</label>
+      <select id="rt-ward-sel" onchange="rtRender()" style="padding:5px 8px;border-radius:6px;border:1px solid var(--border);font-size:11px">
+        <option value="">All wards</option>
+      </select>
+      <input class="search-box" style="width:180px;margin:0" placeholder="Search asset group…" oninput="rtSearchFn(this.value)" id="rt-search-box">
+    </div>
+  </div>
+
+  <!-- EPC chart + map -->
+  <div class="g-map" style="margin-bottom:12px">
+    <div class="card" style="padding:0;overflow:hidden">
+      <div id="rt-map" class="map-container"></div>
+    </div>
+    <div class="card" style="display:flex;flex-direction:column">
+      <div class="card-title">EPC distribution — whole stock</div>
+      <div id="rt-epc-chart" style="padding:4px 0;flex:1"></div>
+    </div>
+  </div>
+
+  <!-- Main AG table -->
+  <div class="card" style="margin-bottom:12px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div class="card-title" style="margin:0">Asset groups — retrofit priority ranking</div>
+      <div style="font-size:11px;color:var(--text-muted)">Click a row to see individual properties</div>
+    </div>
+    <div class="tbl-wrap" style="max-height:380px" id="rt-ag-table"></div>
+  </div>
+
+  <!-- Property drill-down -->
+  <div class="drill-panel" id="rt-drill">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div id="rt-drill-title" style="font-size:15px;font-weight:700;color:var(--green-dark)"></div>
+      <button onclick="closeRtDrill()" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 12px;cursor:pointer;font-size:11px">✕ Close</button>
+    </div>
+    <div id="rt-drill-meta" style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px;font-size:11px;color:var(--text-muted)"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div class="card-title" style="margin:0">Properties in this asset group</div>
+      <div style="display:flex;gap:6px">
+        <input class="search-box" style="width:180px;margin:0" placeholder="Search address…" oninput="rtPropSearchFn(this.value)" id="rt-prop-search">
+        <select id="rt-prop-filter" onchange="rtPropFilterChange()" style="padding:5px 8px;border-radius:6px;border:1px solid var(--border);font-size:11px">
+          <option value="all">All properties</option>
+          <option value="poor-epc">EPC D or below</option>
+          <option value="windows">Windows due ≤2030</option>
+          <option value="loft">Loft Ins due ≤2030</option>
+          <option value="cwi">CWI due ≤2030</option>
+          <option value="ewi">EWI due ≤2030</option>
+          <option value="door">Door due ≤2030</option>
+          <option value="damp">Has damp repairs</option>
+          <option value="damp-red">Damp RAG Red</option>
+        </select>
+        <button id="rt-select-all-btn" onclick="rtToggleSelectAll()" style="padding:5px 10px;border-radius:6px;border:1px solid var(--border);font-size:11px;cursor:pointer;background:var(--green-dark);color:#fff">Select all</button>
+      </div>
+    </div>
+    <div id="rt-selection-bar" style="display:none;background:#EEF7F0;border:1px solid var(--green);border-radius:8px;padding:8px 12px;margin-bottom:8px;font-size:11px;display:flex;align-items:center;gap:12px">
+      <span id="rt-selection-count" style="font-weight:700;color:var(--green-dark)"></span>
+      <span style="color:var(--text-muted)">properties selected</span>
+      <button onclick="rtExportSelection()" style="padding:3px 10px;border-radius:5px;border:none;background:var(--green-dark);color:#fff;cursor:pointer;font-size:11px">📋 Copy list</button>
+      <button onclick="rtClearSelection()" style="padding:3px 10px;border-radius:5px;border:1px solid var(--border);background:#fff;cursor:pointer;font-size:11px">Clear</button>
+    </div>
+    <div class="tbl-wrap" style="max-height:380px" id="rt-prop-table"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════ PAGE 7: DECENT HOMES ════════════════════════════ -->
+<div class="page" id="page-decent">
+  <div class="page-hdr">
+    <div class="page-hdr-row">
+      <div>
+        <div class="page-title">Decent Homes Standard</div>
+        <div class="page-sub">Property-level assessment against the 4 Decent Homes criteria · LAHS reporting · Royal Borough of Greenwich</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button onclick="dhExportLAHS()" style="padding:6px 14px;border-radius:6px;border:none;background:var(--green-dark);color:#fff;cursor:pointer;font-size:11px;font-weight:600">📋 Export LAHS Return</button>
+      </div>
+    </div>
+  </div>
+
+  <details class="methodology" style="margin-bottom:12px">
+    <summary>Details &mdash; how this page works</summary>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px;font-size:11px">
+      <div><div style="font-weight:700;color:#C00000;margin-bottom:4px">Criterion 1 &mdash; HHSRS Hazards</div>
+      <div style="color:var(--text-muted)">FAIL if: Damp RAG = Red OR EPC F/G (excess cold risk). All tenures assessed.</div></div>
+      <div><div style="font-weight:700;color:#E36C09;margin-bottom:4px">Criterion 2 &mdash; State of Repair</div>
+      <div style="color:var(--text-muted)">FAIL if: any key component Year Due is before 2025. Leasehold excluded as council is not responsible for internal component repairs in leasehold properties.</div></div>
+      <div><div style="font-weight:700;color:#7C3AED;margin-bottom:4px">Criterion 3 &mdash; Modern Facilities</div>
+      <div style="color:var(--text-muted)">FAIL if: kitchen over 20 years old OR bathroom over 30 years old. Leasehold excluded as council is not responsible for kitchen or bathroom replacements.</div></div>
+      <div><div style="font-weight:700;color:#2563EB;margin-bottom:4px">Criterion 4 &mdash; Thermal Comfort</div>
+      <div style="color:var(--text-muted)">FAIL if: SAP below 35 OR EPC F/G OR heating overdue. All tenures assessed. A property fails Decent Homes if it fails ANY ONE of the four criteria.</div></div>
+    </div>
+  </details>
+
+
+  <!-- KPI strip -->
+  <div class="kpi-row" id="dh-kpis"></div>
+
+  <!-- Criteria summary cards -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px" id="dh-criteria-cards"></div>
+
+  <!-- Tenure note -->
+  <div id="dh-tenure-note"></div>
+
+  <!-- Filters and view toggle -->
+  <div class="filter-row" style="margin-bottom:10px">
+    <span class="filter-label">VIEW BY:</span>
+    <button class="pill-btn active" onclick="dhView('ward',this)">Ward</button>
+    <button class="pill-btn" onclick="dhView('ag',this)">Asset Group</button>
+    <button class="pill-btn" onclick="dhView('tenure',this)">Tenure</button>
+    <button class="pill-btn" onclick="dhView('props',this)">Properties</button>
+    <div style="margin-left:auto;display:flex;gap:6px;align-items:center">
+      <select id="dh-ward-sel" onchange="dhRender()" style="padding:5px 8px;border-radius:6px;border:1px solid var(--border);font-size:11px">
+        <option value="">All wards</option>
+      </select>
+      <input class="search-box" style="width:180px;margin:0" placeholder="Search…" oninput="dhSearchFn(this.value)" id="dh-search">
+    </div>
+  </div>
+
+  <!-- Main table -->
+  <div class="card" style="margin-bottom:12px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div class="card-title" style="margin:0" id="dh-table-title">Non-Decent Homes by Ward</div>
+      <div style="font-size:11px;color:var(--text-muted)">Click a row to see properties</div>
+    </div>
+    <div class="tbl-wrap" style="max-height:420px" id="dh-table"></div>
+  </div>
+
+  <!-- Property drill-down -->
+  <div class="drill-panel" id="dh-drill">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div id="dh-drill-title" style="font-size:15px;font-weight:700;color:var(--green-dark)"></div>
+      <button onclick="closeDhDrill()" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 12px;cursor:pointer;font-size:11px">✕ Close</button>
+    </div>
+    <div id="dh-drill-meta" style="font-size:11px;color:var(--text-muted);margin-bottom:10px"></div>
+    <div class="tbl-wrap" style="max-height:380px" id="dh-drill-table"></div>
+  </div>
+
+  <!-- Methodology note -->
+  <div class="card" style="margin-top:12px;background:#F8FBF9">
+    <div class="card-title">Assessment Methodology</div>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;font-size:11px">
+      <div>
+        <div style="font-weight:700;color:var(--green-dark);margin-bottom:4px">Criterion 1 — HHSRS (Category 1 Hazards)</div>
+        <div style="color:var(--text-muted)">FAIL if: Damp RAG = Red (active damp/mould hazard) OR EPC rating F or G (excess cold risk)</div>
+      </div>
+      <div>
+        <div style="font-weight:700;color:var(--green-dark);margin-bottom:4px">Criterion 2 — Reasonable State of Repair</div>
+        <div style="color:var(--text-muted)">FAIL if: Any key component is overdue (Year Due before 2025). Components: Windows, Doors, Roof, Boiler, Wiring, External Wall. <b>Leasehold properties excluded</b> — council is not responsible for internal components in leasehold.</div>
+      </div>
+      <div>
+        <div style="font-weight:700;color:var(--green-dark);margin-bottom:4px">Criterion 3 — Modern Facilities</div>
+        <div style="color:var(--text-muted)">FAIL if: Kitchen over 20 years old OR Bathroom over 30 years old (based on Keystone Year Due and standard lifespans). <b>Leasehold properties excluded</b> — council is not responsible for kitchen/bathroom replacements in leasehold.</div>
+      </div>
+      <div>
+        <div style="font-weight:700;color:var(--green-dark);margin-bottom:4px">Criterion 4 — Thermal Comfort</div>
+        <div style="color:var(--text-muted)">FAIL if: SAP score below 35 OR EPC rating F or G OR primary heating system overdue</div>
+      </div>
+    </div>
+    <div style="margin-top:10px;font-size:10px;color:#aaa">A property is classed as Non-Decent if it fails ANY one of the four criteria above. Data source: Keystone REP survey, ATT attribute survey, reactive repairs data, stock master EPC/SAP scores.</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════ PAGE 6: PROGRAMME BUILDER ════════════════════════════ -->
+<div class="page" id="page-programme">
+  <div class="page-hdr">
+    <div class="page-hdr-row">
+      <div>
+        <div class="page-title">Programme Builder</div>
+        <div class="page-sub">Capital investment programme · 2026/27 to 2030/31 · Royal Borough of Greenwich</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button onclick="progExport()" style="padding:6px 14px;border-radius:6px;border:none;background:var(--green-dark);color:#fff;cursor:pointer;font-size:11px;font-weight:600">📋 Export Programme</button>
+      </div>
+    </div>
+  </div>
+
+  <details class="methodology" style="margin-bottom:12px">
+    <summary>Details &mdash; how this page works</summary>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px;font-size:11px">
+      <div><div style="font-weight:700;color:var(--green-dark);margin-bottom:4px">2-Year Bundling Logic</div>
+      <div style="color:var(--text-muted)">If a component is due within 2 years of the earliest due component for the same asset group, it is brought forward into the same programme year to reduce mobilisation costs. Costs are fixed at the original due year (no inflation penalty).</div></div>
+      <div><div style="font-weight:700;color:var(--green-dark);margin-bottom:4px">Cost Calculation</div>
+      <div style="color:var(--text-muted)">Cost = properties where the component is due x unit cost from HbH_Component_Costs.xlsx. Only properties with that component due are included, not all properties in the asset group.</div></div>
+      <div><div style="font-weight:700;color:var(--green-dark);margin-bottom:4px">Budget Status Badges</div>
+      <div style="color:var(--text-muted)">In budget: cumulative cost fits within budget. Partial: this asset group straddles the budget limit. Over: cumulative cost exceeds budget and the group would be deferred. Edit budget inputs to model different scenarios live.</div></div>
+      <div><div style="font-weight:700;color:var(--green-dark);margin-bottom:4px">Unit Costs &amp; Budgets</div>
+      <div style="color:var(--text-muted)">Default costs and budgets load from HbH_Component_Costs.xlsx in Data/Costs/. Edit the blue cells and rerun build_portal.py to update with real figures. Budget inputs on this page update the programme instantly without rerunning.</div></div>
+    </div>
+  </details>
+
+
+  <!-- KPI strip -->
+  <div class="kpi-row" id="prog-kpis"></div>
+
+  <!-- Budget inputs -->
+  <div class="card" style="margin-bottom:12px">
+    <div class="card-title">Annual Budgets — edit to see programme update</div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap" id="prog-budget-inputs"></div>
+    <div style="font-size:10px;color:var(--text-muted);margin-top:8px">
+      💡 Budgets default to the values in HbH_Component_Costs.xlsx. Edit here to explore different scenarios — changes update the programme instantly.
+    </div>
+  </div>
+
+  <!-- Year tabs -->
+  <div style="display:flex;gap:6px;margin-bottom:12px" id="prog-year-tabs"></div>
+
+  <!-- Programme table -->
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div>
+        <div class="card-title" style="margin:0" id="prog-table-title">Programme — 2026/27</div>
+        <div id="prog-budget-status" style="font-size:11px;margin-top:4px"></div>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <label style="font-size:11px;color:var(--text-muted)">Show:</label>
+        <select id="prog-view-sel" onchange="progRender()" style="padding:5px 8px;border-radius:6px;border:1px solid var(--border);font-size:11px">
+          <option value="within">Within budget only</option>
+          <option value="all">All asset groups</option>
+        </select>
+        <input class="search-box" style="width:180px;margin:0" placeholder="Search asset group…" oninput="progSearch(this.value)" id="prog-search">
+      </div>
+    </div>
+    <div class="tbl-wrap" style="max-height:480px" id="prog-table"></div>
+  </div>
+
+  <!-- Property detail panel -->
+  <div class="drill-panel" id="prog-drill">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div id="prog-drill-title" style="font-size:15px;font-weight:700;color:var(--green-dark)"></div>
+      <button onclick="closeProgDrill()" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 12px;cursor:pointer;font-size:11px">✕ Close</button>
+    </div>
+    <div id="prog-drill-content"></div>
+  </div>
+</div></main>
+
+<script>
+// ════════ DATA ════════
+const DATA = /*INJECT_DATA*/[];
+const rag_pill = r => r==='Red'?'<span class="pill pill-r">Red</span>':r==='Amber'?'<span class="pill pill-a">Amber</span>':'<span class="pill pill-g">Green</span>';
+const pct_bar = (r,a,g) => {
+  const t=r+a+g||1;
+  return `<div class="bar-stack"><div class="bar-r" style="width:${r/t*100}%"></div><div class="bar-a" style="width:${a/t*100}%"></div><div class="bar-g" style="width:${g/t*100}%"></div></div>`;
+};
+const fmt = v => v==null?'—':(typeof v==='number'?v.toLocaleString():v);
+const pct  = v => v==null?'—':v+'%';
+const safe = v => v??0;
+
+// Page switching
+function showPage(id,el) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.sidebar-item').forEach(i=>i.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if(el) el.classList.add('active');
+  if(id==='overview'  && !window._ov_init)  { initOverview(); initOvCostTable(); renderOvTop10(); window._ov_init=true; }
+  if(id==='damp'      && !window._dm_init)  { initDamp();     window._dm_init=true; }
+  if(id==='retrofit'      && !window._rt_init)  { initRetrofit();        window._rt_init=true; }
+  if(id==='stockcondition' && !window._sc_init)  { initStockCondition(); window._sc_init=true; }
+  if(id==='blocks'        && !window._blk_init) { initBlocks();         window._blk_init=true; }
+  if(id==='programme'   && !window._prog_init){ initProgramme();  window._prog_init=true; }
+  if(id==='decent'      && !window._dh_init)  { initDecentHomes(); window._dh_init=true; }
+}
+
+// ════════════════════════════════════════════════════════════════════
+// PAGE 1 — OVERVIEW
+const FY_DATA = /*INJECT_FY_DATA*/{};
+let ovMap, ovMapLayer;
+let ovMode = 'ag', ovSearch_ = '', ovActiveComp = 'all', ovFyCat = 'all';
+
+const OV_COMPS = ['Roof','Door','Window','Kitchen','Bathroom','Damp_Mould'];
+const PRIORITY_COLS = ['#1B5E45','#4CB748','#BDD62E','#FFD500','#F7941D','#ED5A29','#C01010'];
+const PRIORITY_LABELS = ['0','1','2','3','4','5','6'];
+const CAT_COLS = {roof:'#C95C3A',door:'#7B4CA0',window:'#2563EB',kitchen:'#B45309',bathroom:'#0891B2',damp_mould:'#2E8B67'};
+
+function groupOvData(mode) {
+  if(mode==='ag') return DATA.filter(r=>r['Asset Group']&&r['Asset Group']!=='0');
+  const grouped={};
+  DATA.forEach(r=>{
+    const key=mode==='ward'?(r.ward||'Unknown'):(r.block||'Unknown');
+    if(!grouped[key]) grouped[key]={rows:[],'Asset Group':key,ward:r.ward,lat:r.lat,lon:r.lon};
+    grouped[key].rows.push(r);
+  });
+  return Object.values(grouped).map(g=>{
+    const agg={'Asset Group':g['Asset Group'],ward:g.ward,lat:g.lat,lon:g.lon};
+    agg.total     = g.rows.reduce((s,r)=>s+(r.total||0),0);
+    agg.rbg_owned = g.rows.reduce((s,r)=>s+(r.rbg_owned||0),0);
+    agg.leasehold = g.rows.reduce((s,r)=>s+(r.leasehold||0),0);
+    agg.genfundta = g.rows.reduce((s,r)=>s+(r.genfundta||0),0);
+    agg.other_own = g.rows.reduce((s,r)=>s+(r.other_own||0),0);
+    OV_COMPS.forEach(c=>{
+      agg[c+'_Red_Count']  = g.rows.reduce((s,r)=>s+(r[c+'_Red_Count']||0),0);
+      agg[c+'_Amber_Count']= g.rows.reduce((s,r)=>s+(r[c+'_Amber_Count']||0),0);
+      agg[c+'_Green_Count']= g.rows.reduce((s,r)=>s+(r[c+'_Green_Count']||0),0);
+      const tot=agg[c+'_Red_Count']+agg[c+'_Amber_Count']+agg[c+'_Green_Count']||1;
+      agg[c+'_Pct_Red']=Math.round(agg[c+'_Red_Count']/tot*1000)/10;
+      agg[c+'_RAG']=agg[c+'_Pct_Red']>=40?'Red':agg[c+'_Pct_Red']>=20?'Amber':'Green';
+    });
+    agg.Overall_Red_Count  =OV_COMPS.reduce((s,c)=>s+(agg[c+'_RAG']==='Red'?1:0),0);
+    agg.Overall_Amber_Count=OV_COMPS.reduce((s,c)=>s+(agg[c+'_RAG']==='Amber'?1:0),0);
+    const sd={};
+    g.rows.forEach(r=>{if(r.score_dist)Object.entries(r.score_dist).forEach(([k,v])=>{sd[k]=(sd[k]||0)+v;});});
+    agg.score_dist=sd;
+    return agg;
+  });
+}
+
+function initOverview() {
+  const tot=DATA.reduce((s,r)=>s+(r.total||0),0);
+  const rbg=DATA.reduce((s,r)=>s+(r.rbg_owned||0),0);
+  const lease=DATA.reduce((s,r)=>s+(r.leasehold||0),0);
+  const genf=DATA.reduce((s,r)=>s+(r.genfundta||0),0);
+  const other=DATA.reduce((s,r)=>s+(r.other_own||0),0);
+  const wards=new Set(DATA.map(r=>r.ward).filter(Boolean)).size;
+  document.getElementById('ov-kpis').innerHTML=[
+    {label:'Total Properties',val:tot.toLocaleString(),sub:'RBG portfolio',col:'var(--green)'},
+    {label:'Council Owned (COUN)',val:rbg.toLocaleString(),sub:Math.round(rbg/tot*100)+'% of stock',col:'var(--green)'},
+    {label:'Leasehold',val:lease.toLocaleString(),sub:Math.round(lease/tot*100)+'% of stock',col:'var(--green-mid)'},
+    {label:'General Fund TA',val:genf.toLocaleString(),sub:Math.round(genf/tot*100)+'% of stock',col:'var(--amber-dark)'},
+    {label:'Other Ownership',val:other.toLocaleString(),sub:'LTL, RSGFTA & other',col:'var(--text-muted)'},
+    {label:'Wards',val:wards,sub:'Greenwich borough',col:'var(--green)'},
+  ].map(k=>`<div class="kpi" style="border-left-color:${k.col}">
+    <div class="kpi-label">${k.label}</div>
+    <div class="kpi-val" style="color:${k.col};font-size:22px">${k.val}</div>
+    <div class="kpi-sub">${k.sub}</div></div>`).join('');
+
+  ovMap=L.map('ov-map').setView([51.488,0.07],12);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{attribution:'&copy; CartoDB'}).addTo(ovMap);
+  const rows=groupOvData('ag');
+  renderOvMap(rows);
+  renderOvTable(rows);
+  renderOvPriorityBars(rows,'all');
+  renderOvFyChart('all');
+}
+
+function renderOvMap(rows) {
+  if(ovMapLayer) ovMap.removeLayer(ovMapLayer);
+  const markers=rows.filter(r=>r.lat&&r.lon).map(r=>{
+    const reds=OV_COMPS.reduce((s,c)=>s+(r[c+'_RAG']==='Red'?1:0),0);
+    const col=reds>=3?'#C95C3A':reds>=1?'#BA7517':'#2E8B67';
+    const m=L.circleMarker([r.lat,r.lon],{radius:5+Math.min((r.total||0)/30,7),fillColor:col,color:'#fff',weight:1.5,fillOpacity:0.85});
+    const rbg_pct=r.total>0?Math.round((r.rbg_owned||0)/r.total*100):0;
+    m.bindPopup(`<div style="font-family:'DM Sans',sans-serif;min-width:185px">
+      <div style="font-size:12px;font-weight:600;color:#1B5E45;margin-bottom:6px">${r['Asset Group']}</div>
+      <div style="font-size:11px;line-height:1.9;color:#555">
+        <b>Ward:</b> ${r.ward||'—'}<br>
+        <b>Total properties:</b> ${r.total||0}<br>
+        <b>Council owned:</b> ${r.rbg_owned||0} (${rbg_pct}%)<br>
+        <b>Leasehold:</b> ${r.leasehold||0}<br>
+        <b>General Fund TA:</b> ${r.genfundta||0}<br>
+        <b>Red components:</b> ${reds} of ${OV_COMPS.length}
+      </div></div>`);
+    return m;
+  });
+  ovMapLayer=L.layerGroup(markers).addTo(ovMap);
+}
+
+function renderOvTable(rows) {
+  const sorted=[...rows].sort((a,b)=>(b.Overall_Red_Count||0)-(a.Overall_Red_Count||0));
+  const filtered=ovSearch_?sorted.filter(r=>r['Asset Group'].toLowerCase().includes(ovSearch_.toLowerCase())):sorted.slice(0,60);
+  document.getElementById('ov-worst-table').innerHTML=`
+    <table class="tbl">
+      <tr><th>Asset Group</th><th>Ward</th><th>Props</th><th>🔴</th><th>🟡</th></tr>
+      ${filtered.map(r=>`<tr>
+        <td style="font-size:10px">${r['Asset Group']}</td>
+        <td style="font-size:10px;color:var(--text-muted)">${r.ward||'—'}</td>
+        <td>${r.total||0}</td>
+        <td><strong style="color:var(--red)">${r.Overall_Red_Count||0}</strong></td>
+        <td style="color:var(--amber-dark)">${r.Overall_Amber_Count||0}</td>
+      </tr>`).join('')}
+    </table>`;
+}
+
+function renderOvPriorityBars(rows, comp) {
+  let sorted;
+  if(comp==='all') {
+    sorted=[...rows].map(r=>{
+      const sd=r.score_dist||{};
+      const risk=(sd[2]||0)+(sd[3]||0)+(sd[4]||0)+(sd[5]||0)+(sd[6]||0);
+      return {...r,_sort:r.total>0?risk/r.total:0};
+    }).sort((a,b)=>b._sort-a._sort).slice(0,35);
+  } else {
+    sorted=[...rows].sort((a,b)=>(b[comp+'_Pct_Red']||0)-(a[comp+'_Pct_Red']||0)).slice(0,35);
+  }
+  const LEN=42;
+  if(comp==='all') {
+    document.getElementById('ov-bar-legend').innerHTML=PRIORITY_LABELS.map((l,i)=>
+      `<div style="display:flex;align-items:center;gap:4px;font-size:11px">
+        <div style="width:11px;height:11px;border-radius:2px;background:${PRIORITY_COLS[i]}"></div>${l} ${i===0?'priorities':i===6?'priorities (6+)':'priority'}</div>`
+    ).join('');
+    document.getElementById('ov-priority-bars').innerHTML=sorted.map(r=>{
+      const sd=r.score_dist||{};const tot=r.total||1;
+      const segs=Array.from({length:7},(_,i)=>{
+        const v=sd[i]||0;
+        return v>0?`<div title="${v} properties — ${i} red components" style="width:${v/tot*100}%;background:${PRIORITY_COLS[i]};height:100%"></div>`:'';
+      }).join('');
+      const name=r['Asset Group'].length>LEN?r['Asset Group'].slice(0,LEN)+'…':r['Asset Group'];
+      return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+        <div style="width:185px;text-align:right;font-size:10px;color:var(--text-muted);flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r['Asset Group']}">${name}</div>
+        <div style="flex:1;height:17px;display:flex;overflow:hidden;border-radius:3px;background:var(--off-white)">${segs}</div>
+        <div style="font-size:10px;color:var(--text-muted);width:32px;text-align:right">${r.total}</div>
+      </div>`;
+    }).join('') + axisBar();
+  } else {
+    document.getElementById('ov-bar-legend').innerHTML=
+      ['Red','Amber','Green'].map((l,i)=>`<div style="display:flex;align-items:center;gap:4px;font-size:11px">
+        <div style="width:11px;height:11px;border-radius:2px;background:${i===0?'#C95C3A':i===1?'#F9C74F':'#8AB4A0'}"></div>${l}</div>`
+      ).join('');
+    document.getElementById('ov-priority-bars').innerHTML=sorted.map(r=>{
+      const red=r[comp+'_Red_Count']||0,amb=r[comp+'_Amber_Count']||0,grn=r[comp+'_Green_Count']||0;
+      const tot=red+amb+grn||1;
+      const name=r['Asset Group'].length>LEN?r['Asset Group'].slice(0,LEN)+'…':r['Asset Group'];
+      return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+        <div style="width:185px;text-align:right;font-size:10px;color:var(--text-muted);flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r['Asset Group']}">${name}</div>
+        <div style="flex:1;height:17px;display:flex;overflow:hidden;border-radius:3px">
+          <div style="width:${red/tot*100}%;background:#C95C3A;height:100%" title="${red} Red"></div>
+          <div style="width:${amb/tot*100}%;background:#F9C74F;height:100%" title="${amb} Amber"></div>
+          <div style="width:${grn/tot*100}%;background:#8AB4A0;height:100%" title="${grn} Green"></div>
+        </div>
+        <div style="font-size:10px;font-weight:600;color:#C95C3A;width:32px;text-align:right">${Math.round(red/tot*100)}%</div>
+      </div>`;
+    }).join('') + axisBar();
+  }
+}
+
+function axisBar() {
+  return `<div style="display:flex;gap:0;margin-top:4px;padding-left:193px;padding-right:40px">
+    ${['0%','20%','40%','60%','80%','100%'].map((l,i)=>`<div style="flex:1;text-align:${i===0?'left':'center'};font-size:9px;color:var(--text-muted)">${l}</div>`).join('')}
+  </div>`;
+}
+
+function renderOvFyChart(cat) {
+  const labels=FY_DATA.labels;
+  const vals=cat==='all'?FY_DATA.total:(FY_DATA.categories[cat]||[0,0,0]);
+  const col=cat==='all'?'var(--green)':(CAT_COLS[cat]||'var(--green)');
+  const maxV=Math.max(...vals,1);
+  const H=130;
+  document.getElementById('ov-fy-chart').innerHTML=`
+    <div style="display:flex;align-items:flex-end;gap:32px;height:${H}px;padding:0 24px;border-bottom:2px solid var(--border);margin-bottom:6px">
+      ${vals.map((v,i)=>{
+        const bH=Math.round(v/maxV*H*0.88);
+        const ch=i>0?Math.round((v-vals[i-1])/vals[i-1]*100):null;
+        return `<div style="display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:3px;flex:1">
+          ${ch!==null?`<div style="font-size:9px;font-weight:600;color:${ch>0?'var(--red)':'var(--green)'}">${ch>0?'▲':'▼'}${Math.abs(ch)}%</div>`:'<div style="font-size:9px">&nbsp;</div>'}
+          <div style="font-size:13px;font-weight:600;color:${col}">${v.toLocaleString()}</div>
+          <div style="width:80%;background:${col};height:${bH}px;border-radius:4px 4px 0 0;opacity:0.8"></div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div style="display:flex;gap:32px;padding:0 24px">
+      ${labels.map(l=>`<div style="flex:1;text-align:center;font-size:11px;color:var(--text-muted);font-weight:500">${l}</div>`).join('')}
+    </div>
+    <div style="text-align:center;font-size:10px;color:var(--text-muted);margin-top:6px">
+      ${cat==='all'?'Total repair work orders (all 6 components combined)':'Work orders — '+cat.replace(/_/g,' ')}
+    </div>`;
+}
+
+function ovFilter(mode,el) {
+  ovMode=mode;
+  document.querySelectorAll('#page-overview .fpill').forEach(p=>p.classList.remove('on'));
+  if(el) el.classList.add('on');
+  // Re-apply active states to nested pill bars
+  document.querySelector('#ov-comp-pills .fpill').classList.add('on');
+  document.querySelector('#ov-fy-pills .fpill').classList.add('on');
+  const rows=groupOvData(mode);
+  renderOvMap(rows); renderOvTable(rows); renderOvPriorityBars(rows,'all'); renderOvFyChart('all');
+  ovActiveComp='all'; ovFyCat='all';
+}
+
+function ovSearch(val){ovSearch_=val;renderOvTable(groupOvData(ovMode));}
+
+function ovSelectComp(comp,el){
+  ovActiveComp=comp;
+  document.querySelectorAll('#ov-comp-pills .fpill').forEach(p=>p.classList.remove('on'));
+  if(el) el.classList.add('on');
+  renderOvPriorityBars(groupOvData(ovMode),comp);
+}
+
+function ovFyFilter(cat,el){
+  ovFyCat=cat;
+  document.querySelectorAll('#ov-fy-pills .fpill').forEach(p=>p.classList.remove('on'));
+  if(el) el.classList.add('on');
+  renderOvFyChart(cat);
+}
+
+// PAGE 2 — DAMP
+// ════════════════════════════════════════════════════════════════════
+let dmMap, dmLayer, dmFilterMode='all', dmSearch_='';
+
+function initDamp() {
+  renderTop10('dm-top10-table');
+  // Ward select
+  const wards = [...new Set(DATA.map(r=>r.ward).filter(Boolean))].sort();
+  const sel = document.getElementById('dm-ward-sel');
+  wards.forEach(w=>{ const o=document.createElement('option'); o.value=w; o.textContent=w; sel.appendChild(o); });
+
+  // KPIs
+  const total = DATA.length;
+  const red   = DATA.filter(r=>r['Damp RAG']==='Red').length;
+  const amber = DATA.filter(r=>r['Damp RAG']==='Amber').length;
+  const avg1  = DATA.filter(r=>r['% w/ 1+ Damp Repairs']>0).length;
+  const severe= DATA.filter(r=>r['% w/ Surveyor Severe']>0).length;
+  document.getElementById('dm-kpis').innerHTML = [
+    {label:'Asset Groups Assessed',val:total,sub:'across all wards'},
+    {label:'Red Risk Groups',val:red,sub:'≥40% with damp repairs',col:'var(--red)'},
+    {label:'Amber Risk Groups',val:amber,sub:'20–39% with damp repairs',col:'var(--amber-dark)'},
+    {label:'Groups w/ Any Damp Repairs',val:avg1,sub:'at least 1 property affected'},
+    {label:'Groups w/ Surveyor Evidence',val:severe,sub:'severe/moderate confirmed'},
+  ].map(k=>`<div class="kpi" style="border-left-color:${k.col||'var(--green)'}">
+    <div class="kpi-label">${k.label}</div>
+    <div class="kpi-val" style="color:${k.col||'var(--green)'}">${k.val}</div>
+    <div class="kpi-sub">${k.sub}</div></div>`).join('');
+
+  // Map
+  dmMap = L.map('dm-map').setView([51.488, 0.07], 12);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{attribution:'&copy; CartoDB'}).addTo(dmMap);
+  renderDampMap(DATA);
+  renderDampTable(DATA);
+}
+
+function renderDampMap(rows) {
+  if(dmLayer) dmMap.removeLayer(dmLayer);
+  const markers = rows.filter(r=>r.lat&&r.lon).map(r=>{
+    const col = r['Damp RAG']==='Red'?'#C95C3A':r['Damp RAG']==='Amber'?'#BA7517':'#2E8B67';
+    const m = L.circleMarker([r.lat,r.lon],{
+      radius:5+Math.min(safe(r['Property Count'])/30,6),
+      fillColor:col,color:'#fff',weight:1.5,fillOpacity:0.85
+    });
+    m.bindPopup(`<strong style="font-size:12px">${r['Asset Group']}</strong><br>
+      Damp RAG: ${r['Damp RAG']}<br>
+      % w/ 1+ repairs: ${safe(r['% w/ 1+ Damp Repairs'])}%<br>
+      % w/ 2+ repairs: ${safe(r['% w/ 2+ Damp Repairs'])}%<br>
+      Total work orders: ${safe(r['Total Damp Work Orders'])}`);
+    m.on('click',()=>openDampDrill(r));
+    return m;
+  });
+  dmLayer = L.layerGroup(markers).addTo(dmMap);
+}
+
+let dmSortCol = 'Damp RAG', dmSortDir = -1;
+
+function renderDampTable(rows) {
+  const filtered = (dmSearch_
+    ? rows.filter(r=>r['Asset Group'].toLowerCase().includes(dmSearch_.toLowerCase()))
+    : rows
+  ).sort((a,b) => {
+    // Always put Red first, then Amber, then Green
+    const ragOrder = {'Red':0,'Amber':1,'Green':2};
+    const ragA = ragOrder[a['Damp RAG']] ?? 3;
+    const ragB = ragOrder[b['Damp RAG']] ?? 3;
+    if(ragA !== ragB) return ragA - ragB;
+    // Within same RAG, sort by selected column
+    return dmSortDir * (safe(b[dmSortCol]) - safe(a[dmSortCol]));
+  });
+
+  const cols = [
+    {key:'Asset Group',                    label:'Asset Group',       num:false},
+    {key:'Property Count',                 label:'Props',             num:true},
+    {key:'Damp RAG',                       label:'RAG',               num:false},
+    {key:'% w/ 1+ Damp Repairs',           label:'% 1+ Damp',         num:true},
+    {key:'% w/ 2+ Damp Repairs',           label:'% 2+ Damp',         num:true},
+    {key:'total_leaks',                    label:'Total Leaks',       num:true},
+    {key:'both_leak_damp',                 label:'Leak + Damp Props', num:true},
+    {key:'Avg Damp Repairs per Property',  label:'Avg Repairs',       num:true},
+    {key:'avg_damp_cost_per_prop',          label:'Avg Damp Cost',      num:true},
+    {key:'damp_repair_cost',               label:'Total Damp Cost',    num:true},
+  ];
+
+  const arrow = key => key===dmSortCol ? (dmSortDir===-1?'▼':'▲') : '<span style="opacity:0.3">⇅</span>';
+
+  document.getElementById('dm-table').innerHTML = `
+    <table class="tbl">
+      <tr>${cols.map(c=>`<th style="cursor:pointer;user-select:none;white-space:nowrap" onclick="dmSort('${c.key}')">${c.label} ${arrow(c.key)}</th>`).join('')}</tr>
+      ${filtered.map(r=>`<tr onclick="openDampDrill(${JSON.stringify(r).replace(/"/g,'&quot;')})">
+        ${cols.map(c => {
+          if(!c.num) {
+            if(c.key==='Asset Group') return `<td style="font-size:10px">${r['Asset Group']}</td>`;
+            if(c.key==='Damp RAG')   return `<td>${rag_pill(r['Damp RAG'])}</td>`;
+            return `<td>${r[c.key]??'—'}</td>`;
+          }
+          const v = r[c.key]??0;
+          if(c.key==='% w/ 1+ Damp Repairs') return `<td style="font-weight:600;color:${v>=40?'var(--red)':v>=20?'var(--amber-dark)':'var(--green)'}">${v}%</td>`;
+          if(c.key==='% w/ 2+ Damp Repairs') return `<td style="color:var(--amber-dark)">${v}%</td>`;
+          if(c.key==='total_leaks')           return `<td style="color:#2563EB">${v}</td>`;
+          if(c.key==='both_leak_damp')        return `<td style="font-weight:${v>0?'700':'400'};color:${v>0?'var(--red)':'var(--text-muted)'}">${v}</td>`;
+          if(c.key==='Avg Damp Repairs per Property') return `<td>${v}</td>`;
+          if(c.key==='avg_damp_cost_per_prop') return `<td style="color:var(--green-dark);font-weight:600">£${Math.round(v).toLocaleString()}</td>`;
+          if(c.key==='damp_repair_cost') return `<td style="font-weight:600;color:var(--green-dark)">£${Math.round(v).toLocaleString()}</td>`;
+          return `<td>${v}</td>`;
+        }).join('')}
+      </tr>`).join('')}
+    </table>`;
+}
+
+function dmSort(col) {
+  if(dmSortCol===col) dmSortDir *= -1;
+  else { dmSortCol=col; dmSortDir=-1; }
+  let rows=DATA;
+  if(dmFilterMode==='block') rows=DATA.filter(r=>r.block&&r.block.trim()!=='');
+  if(dmFilterMode==='ward-sel'||dmFilterMode==='ward'){const w=document.getElementById('dm-ward-sel').value;if(w)rows=DATA.filter(r=>r.ward===w);}
+  renderDampTable(rows);
+}
+
+function dampFilter(mode,el) {
+  dmFilterMode=mode;
+  document.querySelectorAll('#page-damp .fpill').forEach(p=>p.classList.remove('on'));
+  const sel=document.getElementById('dm-ward-sel');
+  if(mode==='ward'){ sel.style.display='inline-block'; if(el)el.classList.add('on'); }
+  else{ sel.style.display='none'; if(el)el.classList.add('on'); }
+  let rows=DATA;
+  if(mode==='block') rows=DATA.filter(r=>r.block&&r.block.trim()!==''&&r.block!=='nan');
+  if(mode==='ward-sel'||mode==='ward'){
+    const w=sel.value; if(w) rows=DATA.filter(r=>r.ward===w);
+  }
+  renderDampMap(rows); renderDampTable(rows);
+}
+
+function dampSearch(val){ dmSearch_=val; let rows=DATA;
+  if(dmFilterMode==='block') rows=DATA.filter(r=>r.block&&r.block.trim()!=='');
+  renderDampTable(rows); }
+
+function openDampDrill(r) {
+  if(typeof r==='string') r=JSON.parse(r);
+  document.getElementById('dm-drill').classList.add('open');
+  document.getElementById('dm-drill-title').textContent=r['Asset Group'];
+
+  // Factors
+  const factors=[
+    {label:'% with 1+ damp repairs',val:r['% w/ 1+ Damp Repairs']+'%',rag:safe(r['% w/ 1+ Damp Repairs'])>=40?'Red':safe(r['% w/ 1+ Damp Repairs'])>=20?'Amber':'Green'},
+    {label:'% with 2+ damp repairs (recurrent)',val:r['% w/ 2+ Damp Repairs']+'%',rag:safe(r['% w/ 2+ Damp Repairs'])>=30?'Red':safe(r['% w/ 2+ Damp Repairs'])>=15?'Amber':'Green'},
+    {label:'Total damp work orders',val:r['Total Damp Work Orders'],rag:''},
+    {label:'Avg repairs per property',val:r['Avg Damp Repairs per Property'],rag:''},
+    {label:'Total damp/leak repair cost',val:r.damp_repair_cost?'£'+Math.round(r.damp_repair_cost).toLocaleString():'—',rag:''},
+    {label:'Avg damp cost per property', val:r.avg_damp_cost_per_prop?'£'+Math.round(r.avg_damp_cost_per_prop).toLocaleString():'—',rag:''},
+    {label:'Total repair cost (all)',    val:'£'+Math.round(r.total_repair_cost||0).toLocaleString(),rag:''},
+    {label:'Surveyor: severe',val:r['% w/ Surveyor Severe']+'%',rag:safe(r['% w/ Surveyor Severe'])>0?'Red':'Green'},
+    {label:'Surveyor: moderate',val:r['% w/ Surveyor Moderate']+'%',rag:safe(r['% w/ Surveyor Moderate'])>0?'Amber':'Green'},
+    {label:'Loft insulation due within 5 yrs',val:r['% Loft Insulation Due']+'%',rag:safe(r['% Loft Insulation Due'])>=50?'Amber':'Green'},
+    {label:'CWI due within 5 yrs',val:r['% CWI Due']+'%',rag:safe(r['% CWI Due'])>=50?'Amber':'Green'},
+    {label:'Stock condition damp flag',val:r['% w/ SC Damp Flag']+'%',rag:safe(r['% w/ SC Damp Flag'])>=20?'Amber':'Green'},
+  ];
+  document.getElementById('dm-drill-factors').innerHTML = factors.map(f=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:11px;color:var(--text-muted)">${f.label}</span>
+      <span style="font-size:12px;font-weight:600">${f.val} ${f.rag?rag_pill(f.rag):''}</span>
+    </div>`).join('');
+
+  // Stock condition table for this asset group
+  const ag=r['Asset Group'];
+  const sc_comps=['Damp and Mould Growth','Loft Insulation','Cavity Wall Insulation','Bathroom Fan','Kitchen Fan','Solid Wall Insulation','External Wall Finish','Spalling Brickwork','External Wall Construction','Window Type','Private Front Entrance Door'];
+  const sc_rows=RETROFIT.filter(d=>d['Asset Group']===ag&&sc_comps.includes(d.Component));
+  document.getElementById('dm-drill-sc').innerHTML = sc_rows.length===0?'<p style="font-size:11px;color:var(--text-muted);padding:8px 0">No stock condition records for this asset group.</p>':`
+    <table class="tbl">
+      <tr><th>Component</th><th>Earliest Year Due</th><th>Due ≤2030</th><th>Total Records</th></tr>
+      ${sc_rows.map(s=>`<tr>
+        <td>${s.Component}</td>
+        <td style="font-weight:600;color:${safe(s.Min_Year_Due)<=2026?'var(--red)':safe(s.Min_Year_Due)<=2028?'var(--amber-dark)':'var(--green)'}">${s.Min_Year_Due??'N/A'}</td>
+        <td>${safe(s.Due_Within_5yr)}</td>
+        <td>${safe(s.Total_Records)}</td>
+      </tr>`).join('')}
+    </table>`;
+  // Render narrative summary
+  const summaryEl = document.getElementById('dm-drill-summary');
+  if(summaryEl && r.ag_summary) {
+    summaryEl.innerHTML = `
+      <div style="background:#F0F7F4;border-left:4px solid var(--green);border-radius:0 8px 8px 0;padding:12px 14px;margin-top:4px">
+        <div style="font-size:10px;font-weight:700;color:var(--green-dark);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">
+          📋 Asset Group Summary
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);line-height:1.6">${r.ag_summary}</div>
+      </div>`;
+  } else if(summaryEl) {
+    summaryEl.innerHTML = '';
+  }
+
+  renderDmPropTable(r['Asset Group']);
+
+  // Render leak section
+  const leakEl = document.getElementById('dm-drill-leaks');
+  if(leakEl) {
+    const totalLeaks = r.total_leaks    || 0;
+    const propsLeaks = r.props_with_leaks || 0;
+    const pctLeaks   = r.pct_with_leaks  || 0;
+    const bothLD     = r.both_leak_damp  || 0;
+    const causeRoof  = r.cause_roof      || 0;
+    const causePlumb = r.cause_plumbing  || 0;
+    const causeUnk   = r.cause_unknown   || 0;
+    const impStr     = r.impact_structural || 0;
+    const impDamp    = r.impact_damp     || 0;
+    const impElec    = r.impact_electrical || 0;
+    const leakCol = pctLeaks>=20?'var(--red)':pctLeaks>=10?'var(--amber-dark)':'var(--green)';
+    const bothCol = bothLD>0?'var(--red)':'var(--text-muted)';
+
+    leakEl.innerHTML = totalLeaks === 0
+      ? `<div style="font-size:11px;font-weight:700;color:var(--green-dark);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">LEAK RISK FACTORS</div>
+         <p style="font-size:11px;color:var(--text-muted)">No leak work orders recorded for this asset group.</p>`
+      : `<div style="font-size:11px;font-weight:700;color:var(--green-dark);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">LEAK RISK FACTORS</div>
+         <table style="width:100%;font-size:11px;border-collapse:collapse">
+           ${[
+             ['Total leak work orders',            totalLeaks,  ''],
+             ['Properties with 1+ leaks',          propsLeaks,  ''],
+             ['% properties with leaks',           pctLeaks+'%', leakCol],
+             ['Properties with BOTH leaks and damp', bothLD,    bothCol],
+             ['Leak cause: Roof',                  causeRoof,   '#7B3F00'],
+             ['Leak cause: Plumbing',              causePlumb,  '#2563EB'],
+             ['Leak cause: Unknown',               causeUnk,    '#888'],
+             ['Leak impact: Structural / Wall',    impStr,      '#C00000'],
+             ['Leak impact: Damp',                 impDamp,     '#E36C09'],
+             ['Leak impact: Electrical',           impElec,     '#7C3AED'],
+           ].map(([label, val, col]) =>
+             `<tr style="border-bottom:1px solid #f5f5f5">
+               <td style="padding:5px 0;color:var(--text-muted)">${label}</td>
+               <td></td>
+               <td style="text-align:right;font-weight:${col?'700':'400'};color:${col||'var(--text-muted)'}">
+                 ${val}
+               </td>
+             </tr>`
+           ).join('')}
+         </table>`;
+  }
+
+  document.getElementById('dm-drill').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function closeDampDrill(){
+  document.getElementById('dm-drill').classList.remove('open');
+  document.getElementById('dm-prop-search').value='';
+  dmPropSearch_=''; dmPropFilterMode_='all';
+}
+
+let _dmCurrentAG = null, dmPropSearch_ = '', dmPropFilterMode_ = 'all';
+
+function dmPropSearch(val){ dmPropSearch_=val; renderDmPropTable(_dmCurrentAG); }
+function dmPropFilter(){ dmPropFilterMode_=document.getElementById('dm-prop-filter').value; renderDmPropTable(_dmCurrentAG); }
+
+function renderDmPropTable(ag) {
+  _dmCurrentAG = ag;
+  const rows = PROP_LOOKUP[ag] || [];
+
+  const filtered = rows.filter(r => {
+    if(dmPropFilterMode_==='repairs' && !(r.repairs > 0)) return false;
+    if(dmPropFilterMode_==='red' && r.damp_rag!=='Red') return false;
+    if(dmPropSearch_ && !r.addr.toLowerCase().includes(dmPropSearch_.toLowerCase()) &&
+       !r.uprn.includes(dmPropSearch_)) return false;
+    return true;
+  }).sort((a,b) => (b.repairs||0) - (a.repairs||0));
+
+  const fmtYr = yr => {
+    if(!yr) return '<span style="color:#ccc">—</span>';
+    const col = yr<=2026?'var(--red)':yr<=2028?'var(--amber-dark)':yr<=2030?'var(--amber-dark)':'var(--green)';
+    return `<span style="font-weight:600;color:${col}">${yr}</span>`;
+  };
+
+  const ragDot = r => r==='Red'?'🔴':r==='Amber'?'🟡':'🟢';
+
+  if(filtered.length===0){
+    document.getElementById('dm-prop-table').innerHTML=
+      '<p style="font-size:11px;color:var(--text-muted);padding:10px">No properties match the current filter.</p>';
+    return;
+  }
+
+  document.getElementById('dm-prop-table').innerHTML = `
+    <table class="tbl">
+      <tr>
+        <th>UPRN</th><th>Address</th><th>Postcode</th><th>Damp RAG</th>
+        <th>Damp Repairs</th><th>Damp Due</th><th>Loft Due</th>
+        <th>CWI Due</th><th>EWI Due</th><th>Repoint Due</th>
+        <th>Window Due</th><th>Fan Due</th>
+      </tr>
+      ${filtered.map(r=>`<tr style="cursor:pointer" onclick="toggleWorkOrders(this.dataset.uprn)" data-uprn="${r.uprn}" title="Click to see damp work orders">
+        <td style="font-family:monospace;font-size:10px">${r.uprn}</td>
+        <td style="font-size:10px">${r.addr||'—'}</td>
+        <td style="font-size:10px">${r.post||'—'}</td>
+        <td style="text-align:center">${ragDot(r.damp_rag)}</td>
+        <td style="text-align:center;font-weight:600;color:${(r.repairs||0)>=2?'var(--red)':(r.repairs||0)>=1?'var(--amber-dark)':'var(--text-muted)'}">${r.repairs||0}</td>
+        <td>${fmtYr(r.damp_due)}</td>
+        <td>${fmtYr(r.loft_due)}</td>
+        <td>${fmtYr(r.cwi_due)}</td>
+        <td>${fmtYr(r.ewi_due)}</td>
+        <td>${fmtYr(r.repoint_due)}</td>
+        <td>${fmtYr(r.window_due)}</td>
+        <td>${fmtYr(r.fan_due)}</td>
+      </tr>
+        <tr id="wo-${r.uprn}" style="display:none">
+          <td colspan="12" style="padding:0;background:#F0F7F4">
+            <div style="padding:8px 14px">
+              <div style="font-size:10px;font-weight:700;color:var(--green-dark);margin-bottom:6px">📋 Damp Work Orders — ${r.addr||r.uprn}</div>
+              <div id="wo-tbl-${r.uprn}"></div>
+            </div>
+          </td>
+        </tr>`).join('')}
+    </table>
+    <div style="font-size:10px;color:var(--text-muted);padding:4px 0">
+      Showing ${filtered.length} of ${rows.length} properties · sorted by repair count · <b>click a row to see work orders</b>
+    </div>`;
+}
+
+
+// ════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════
+// PAGE 3 — RETROFIT & SUSTAINABILITY (rebuilt)
+// ════════════════════════════════════════════════════════
+
+let rtMap, rtMapMarkers=[], rtFilterMode='all', rtSearchVal='',
+    rtSortCol='retrofit_score', rtSortDir=-1,
+    rtCurrentAG=null, rtPropSearch='', rtPropFilterMode='all',
+    rtSelectedUPRNs=new Set();
+
+const EPC_COLS = {A:'#1B5E45',B:'#4CAF50',C:'#8BC34A',D:'#FFC107',E:'#FF9800',F:'#F44336',G:'#B71C1C'};
+
+const RT_COMPS = [
+  {key:'pct_win', label:'Windows', col:'#2563EB'},
+  {key:'pct_door',label:'Front Door',col:'#7B3F00'},
+  {key:'pct_loft',label:'Loft Ins',col:'#0891B2'},
+  {key:'pct_cwi', label:'CWI',col:'#059669'},
+  {key:'pct_ewi', label:'EWI',col:'#7C3AED'},
+];
+
+function initRetrofit() {
+  const rd = RETROFIT_DATA;
+
+  if(!rd || !rd.ag_data) { console.warn('RETROFIT_DATA missing'); return; }
+
+  // Ward dropdown
+  const wards = [...new Set(DATA.map(r=>r.ward).filter(Boolean))].sort();
+  const sel = document.getElementById('rt-ward-sel');
+  wards.forEach(w=>{ const o=document.createElement('option'); o.value=w; o.textContent=w; sel.appendChild(o); });
+
+  // Map
+  if(!rtMap){
+    rtMap = L.map('rt-map').setView([51.485,-0.005],11);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{attribution:'© CartoDB',maxZoom:19}).addTo(rtMap);
+  }
+
+  renderRtKpis();
+  renderRtEpcChart();
+  renderRtAgTable();
+  renderRtMap();
+}
+
+function getRtAgs() {
+  const rd = RETROFIT_DATA;
+  let rows = DATA.map(r => {
+    const d = (rd.ag_data || rd.ag_epc || {})[r['Asset Group']] || {};
+    const ret = (rd.ag_retrofit || {})[r['Asset Group']] || {};
+    const pct_win  = d.pct_win  ?? ret.pct_windows_2030 ?? 0;
+    const pct_door = d.pct_door ?? ret.pct_door_2030    ?? 0;
+    const pct_loft = d.pct_loft ?? ret.pct_loft_2030    ?? 0;
+    const pct_cwi  = d.pct_cwi  ?? ret.pct_cwi_2030     ?? 0;
+    const pct_ewi  = d.pct_ewi  ?? ret.pct_ewi_2030     ?? 0;
+    const pct_poor = d.pct_poor ?? 0;
+    const retrofit_score = (pct_win>=20?1:0)+(pct_door>=20?1:0)+(pct_loft>=20?1:0)+
+                           (pct_cwi>=5?1:0)+(pct_ewi>=5?1:0)+(pct_poor>=30?1:0);
+    const merged = {
+      ...d, pct_win, pct_door, pct_loft, pct_cwi, pct_ewi, retrofit_score,
+    };
+    return {...r, ...merged};
+  });
+  if(rtFilterMode==='poor-epc') rows=rows.filter(r=>(r.pct_poor||0)>=20);
+  if(rtFilterMode==='windows')  rows=rows.filter(r=>(r.pct_win||0)>0);
+  if(rtFilterMode==='loft')     rows=rows.filter(r=>(r.pct_loft||0)>0);
+  if(rtFilterMode==='damp')     rows=rows.filter(r=>(r.pct_damp||0)>=10);
+  const ward = document.getElementById('rt-ward-sel')?.value;
+  if(ward) rows=rows.filter(r=>r.ward===ward);
+  if(rtSearchVal) rows=rows.filter(r=>r['Asset Group']?.toLowerCase().includes(rtSearchVal.toLowerCase()));
+  return rows.sort((a,b) => rtSortDir*((b[rtSortCol]||0)-(a[rtSortCol]||0)));
+}
+
+function rtFilter(mode,el){
+  rtFilterMode=mode;
+  document.querySelectorAll('#page-retrofit .pill-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderRtKpis(); renderRtAgTable(); renderRtMap();
+}
+function rtSearchFn(v){ rtSearchVal=v; renderRtAgTable(); renderRtMap(); }
+function rtSort(col){ if(rtSortCol===col) rtSortDir*=-1; else{rtSortCol=col;rtSortDir=-1;} renderRtAgTable(); }
+
+function renderRtKpis(){
+  const rows = getRtAgs();
+  const rd = RETROFIT_DATA.ag_data;
+  let totalProps=0, totalPoor=0, totalA=0, totalB=0, totalC=0;
+  rows.forEach(r=>{
+    const d = rd[r['Asset Group']]||{};
+    const t = d.total||0; const dist=d.epc_dist||{};
+    totalProps+=t;
+    totalPoor+=(dist.D||0)+(dist.E||0)+(dist.F||0)+(dist.G||0);
+    totalA+=(dist.A||0)+(dist.B||0); totalC+=(dist.C||0);
+  });
+  const highPri = rows.filter(r=>(r.retrofit_score||0)>=3).length;
+  const dampPri = rows.filter(r=>(r.pct_damp||0)>=30).length;
+  document.getElementById('rt-kpis').innerHTML=[
+    {label:'Asset Groups',     val:rows.length,               sub:'in current filter',        col:'var(--green-dark)'},
+    {label:'% EPC D or Below', val:totalProps>0?Math.round(totalPoor/totalProps*100)+'%':'—',sub:`${totalPoor.toLocaleString()} of ${totalProps.toLocaleString()} properties`,col:'var(--red)'},
+    {label:'EPC A or B',       val:totalA.toLocaleString(),   sub:'high performing stock',    col:'var(--green)'},
+    {label:'EPC C',            val:totalC.toLocaleString(),   sub:'meets decent homes',       col:'#2563EB'},
+    {label:'High Priority AGs',val:highPri,                   sub:'3+ retrofit indicators',   col:'#7C3AED'},
+    {label:'High Damp Risk',   val:dampPri,                   sub:'≥30% properties w/ damp', col:'#C95C3A'},
+  ].map(k=>`<div class="kpi-card">
+    <div class="kpi-label">${k.label}</div>
+    <div class="kpi-val" style="color:${k.col}">${k.val}</div>
+    <div class="kpi-sub">${k.sub}</div>
+  </div>`).join('');
+}
+
+function renderRtEpcChart(){
+  const rd = RETROFIT_DATA.ag_data;
+  const totals={A:0,B:0,C:0,D:0,E:0,F:0,G:0};
+  Object.values(rd).forEach(d=>{ const dist=d.epc_dist||{}; Object.keys(totals).forEach(r=>totals[r]+=(dist[r]||0)); });
+  const total=Object.values(totals).reduce((a,b)=>a+b,0);
+  document.getElementById('rt-epc-chart').innerHTML=Object.entries(totals).map(([r,n])=>{
+    const pct=total>0?(n/total*100).toFixed(1):0;
+    return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+      <div style="width:18px;font-weight:700;font-size:12px;color:${EPC_COLS[r]}">${r}</div>
+      <div style="flex:1;background:#f0f0f0;border-radius:3px;height:20px;overflow:hidden">
+        <div style="width:${pct}%;background:${EPC_COLS[r]};height:100%;display:flex;align-items:center;padding:0 5px;min-width:35px">
+          <span style="font-size:10px;color:#fff;font-weight:600">${pct}%</span>
+        </div>
+      </div>
+      <div style="width:55px;text-align:right;font-size:10px;color:var(--text-muted)">${n.toLocaleString()}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderRtAgTable(){
+  const rows = getRtAgs();
+  const arrow = k => k===rtSortCol?(rtSortDir===-1?'▼':'▲'):'<span style="opacity:0.3">⇅</span>';
+  const epcBar = dist => {
+    const t=Object.values(dist||{}).reduce((a,b)=>a+b,0)||1;
+    return Object.entries(EPC_COLS).map(([r,col])=>{
+      const n=(dist||{})[r]||0; const w=n/t*100;
+      return w>0?`<span style="display:inline-block;width:${w}%;background:${col};height:10px" title="${r}: ${n}"></span>`:'';
+    }).join('');
+  };
+  const scoreBar = s => {
+    const col=s>=4?'#7C3AED':s>=3?'var(--red)':s>=2?'var(--amber-dark)':'#aaa';
+    return Array.from({length:6},(_,i)=>`<span style="display:inline-block;width:10px;height:14px;border-radius:2px;margin-right:1px;background:${i<s?col:'#e0e0e0'}"></span>`).join('');
+  };
+  const dampCol = pct => pct>=40?'var(--red)':pct>=20?'var(--amber-dark)':'var(--text-muted)';
+
+  document.getElementById('rt-ag-table').innerHTML=`
+    <table class="tbl">
+      <tr>
+        <th style="cursor:pointer" onclick="rtSort('retrofit_score')">Priority ${arrow('retrofit_score')}</th>
+        <th>Asset Group</th>
+        <th style="cursor:pointer" onclick="rtSort('total')">Props ${arrow('total')}</th>
+        <th style="cursor:pointer" onclick="rtSort('pct_poor')">% D–G ${arrow('pct_poor')}</th>
+        <th>EPC Mix</th>
+        <th style="cursor:pointer" onclick="rtSort('avg_sap')">Avg SAP ${arrow('avg_sap')}</th>
+        <th style="cursor:pointer;color:#fff" onclick="rtSort('pct_win')">Win ${arrow('pct_win')}</th>
+        <th style="cursor:pointer;color:#fff" onclick="rtSort('pct_door')">Door ${arrow('pct_door')}</th>
+        <th style="cursor:pointer;color:#fff" onclick="rtSort('pct_loft')">Loft ${arrow('pct_loft')}</th>
+        <th style="cursor:pointer;color:#fff" onclick="rtSort('pct_cwi')">CWI ${arrow('pct_cwi')}</th>
+        <th style="cursor:pointer;color:#fff" onclick="rtSort('pct_ewi')">EWI ${arrow('pct_ewi')}</th>
+        <th style="cursor:pointer;color:#fff" onclick="rtSort('pct_damp')">Damp% ${arrow('pct_damp')}</th>
+        <th style="cursor:pointer" onclick="rtSort('damp_orders')">WOs ${arrow('damp_orders')}</th>
+      </tr>
+      ${rows.map(r=>`<tr style="cursor:pointer" onclick="openRtDrill('${r['Asset Group'].replace(/'/g,"\'")}')">
+        <td>${scoreBar(r.retrofit_score||0)} <span style="font-size:10px;color:var(--text-muted)">${r.retrofit_score||0}/6</span></td>
+        <td style="font-size:10px">${r['Asset Group']}</td>
+        <td style="text-align:center">${r.total||0}</td>
+        <td style="font-weight:700;color:${(r.pct_poor||0)>=50?'var(--red)':(r.pct_poor||0)>=30?'var(--amber-dark)':'var(--green)'}">${r.pct_poor||0}%</td>
+        <td><div style="display:flex;width:80px;height:10px;border-radius:3px;overflow:hidden">${epcBar(r.epc_dist)}</div></td>
+        <td style="text-align:center;font-size:10px">${r.avg_sap||'—'}</td>
+        <td style="text-align:center;color:#2563EB;font-weight:${(r.pct_win||0)>0?'700':'400'}">${r.pct_win||0}%</td>
+        <td style="text-align:center;color:#7B3F00;font-weight:${(r.pct_door||0)>0?'700':'400'}">${r.pct_door||0}%</td>
+        <td style="text-align:center;color:#0891B2;font-weight:${(r.pct_loft||0)>0?'700':'400'}">${r.pct_loft||0}%</td>
+        <td style="text-align:center;color:#059669;font-weight:${(r.pct_cwi||0)>0?'700':'400'}">${r.pct_cwi||0}%</td>
+        <td style="text-align:center;color:#7C3AED;font-weight:${(r.pct_ewi||0)>0?'700':'400'}">${r.pct_ewi||0}%</td>
+        <td style="text-align:center;font-weight:600;color:${dampCol(r.pct_damp||0)}">${r.pct_damp||0}%</td>
+        <td style="text-align:center;font-size:10px">${r.damp_orders||0}</td>
+      </tr>`).join('')}
+    </table>
+    <div style="font-size:10px;color:var(--text-muted);padding:4px">
+      Showing ${rows.length} asset groups · Priority = count of retrofit indicators triggered ·
+      Win &nbsp;
+      Door &nbsp;
+      Loft &nbsp;
+      CWI &nbsp;
+      EWI &nbsp;
+      <span style="color:#C95C3A">■</span> EPC D+ ≥30%
+    </div>`;
+}
+
+function renderRtMap(){
+  if(!rtMap) return;
+  rtMapMarkers.forEach(m=>rtMap.removeLayer(m)); rtMapMarkers=[];
+  const rd = RETROFIT_DATA.ag_data;
+  getRtAgs().filter(r=>r.lat&&r.lon).forEach(r=>{
+    const d=rd[r['Asset Group']]||{};
+    const score=d.retrofit_score||0;
+    const col=score>=4?'#7C3AED':score>=3?'#E53E3E':score>=2?'#D97706':score>=1?'#4A5568':'#48BB78';
+    const marker=L.circleMarker([r.lat,r.lon],{radius:Math.max(5,Math.min(14,(d.total||10)/8)),
+      fillColor:col,color:'#fff',weight:1.5,fillOpacity:0.85})
+      .addTo(rtMap)
+      .bindPopup(`<b>${r['Asset Group']}</b><br>Priority: ${score}/6 · EPC D+: ${d.pct_poor||0}% · Damp: ${d.pct_damp||0}%`);
+    marker.on('click',()=>openRtDrill(r['Asset Group']));
+    rtMapMarkers.push(marker);
+  });
+}
+
+function openRtDrill(ag){
+  rtCurrentAG=ag; rtSelectedUPRNs=new Set();
+  document.getElementById('rt-drill-title').textContent=ag;
+  const d=RETROFIT_DATA.ag_data[ag]||{};
+  const meta=[
+    `Props: <b>${d.total||0}</b>`,
+    `EPC D–G: <b>${d.pct_poor||0}%</b>`,
+    `Avg SAP: <b>${d.avg_sap||'—'}</b>`,
+    `Damp: <b>${d.pct_damp||0}%</b>`,
+    `Priority score: <b>${d.retrofit_score||0}/6</b>`,
+  ].join(' · ');
+  document.getElementById('rt-drill-meta').innerHTML=meta;
+  document.getElementById('rt-prop-search').value='';
+  document.getElementById('rt-prop-filter').value='all';
+  rtPropSearch=''; rtPropFilterMode='all';
+  updateRtSelectionBar();
+  renderRtPropTable();
+  document.getElementById('rt-drill').classList.add('open');
+  document.getElementById('rt-drill').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function closeRtDrill(){
+  document.getElementById('rt-drill').classList.remove('open');
+  rtCurrentAG=null; rtSelectedUPRNs=new Set();
+}
+
+function rtPropSearchFn(v){ rtPropSearch=v; renderRtPropTable(); }
+function rtPropFilterChange(){ rtPropFilterMode=document.getElementById('rt-prop-filter').value; renderRtPropTable(); }
+
+function getRtPropRows(){
+  const rows=(RETROFIT_DATA.prop_lookup[rtCurrentAG]||[]).filter(r=>{
+    if(rtPropFilterMode==='poor-epc'  && !['D','E','F','G'].includes(r.epc)) return false;
+    if(rtPropFilterMode==='windows'   && !(r.wins&&r.wins<=2030)) return false;
+    if(rtPropFilterMode==='loft'      && !(r.loft&&r.loft<=2030)) return false;
+    if(rtPropFilterMode==='cwi'       && !(r.cwi&&r.cwi<=2030))   return false;
+    if(rtPropFilterMode==='ewi'       && !(r.ewi&&r.ewi<=2030))   return false;
+    if(rtPropFilterMode==='door'      && !(r.door&&r.door<=2030)) return false;
+    if(rtPropFilterMode==='damp'      && !(r.damp>0))             return false;
+    if(rtPropFilterMode==='damp-red'  && r.damp_rag!=='Red')      return false;
+    if(rtPropSearch && !r.addr?.toLowerCase().includes(rtPropSearch.toLowerCase()) &&
+       !r.uprn?.includes(rtPropSearch)) return false;
+    return true;
+  });
+  return rows.sort((a,b)=>(b.damp||0)-(a.damp||0)||(a.wins||9999)-(b.wins||9999));
+}
+
+function rtToggleSelectAll(){
+  const rows=getRtPropRows();
+  const allSelected=rows.every(r=>rtSelectedUPRNs.has(r.uprn));
+  if(allSelected) rows.forEach(r=>rtSelectedUPRNs.delete(r.uprn));
+  else rows.forEach(r=>rtSelectedUPRNs.add(r.uprn));
+  updateRtSelectionBar(); renderRtPropTable();
+}
+
+function rtToggleProp(uprn){
+  if(rtSelectedUPRNs.has(uprn)) rtSelectedUPRNs.delete(uprn);
+  else rtSelectedUPRNs.add(uprn);
+  updateRtSelectionBar(); renderRtPropTable();
+}
+
+function rtClearSelection(){ rtSelectedUPRNs=new Set(); updateRtSelectionBar(); renderRtPropTable(); }
+
+function updateRtSelectionBar(){
+  const bar=document.getElementById('rt-selection-bar');
+  const count=document.getElementById('rt-selection-count');
+  if(!bar||!count) return;
+  if(rtSelectedUPRNs.size>0){
+    bar.style.display='flex'; count.textContent=rtSelectedUPRNs.size;
+  } else {
+    bar.style.display='none';
+  }
+}
+
+function rtExportSelection(){
+  const all=Object.values(RETROFIT_DATA.prop_lookup).flat();
+  const selected=all.filter(r=>rtSelectedUPRNs.has(r.uprn));
+  const lines=['UPRN,Address,Postcode,EPC,SAP,Damp Repairs,Damp RAG,Windows Due,Door Due,Loft Due,CWI Due,EWI Due']
+    .concat(selected.map(r=>[r.uprn,r.addr,r.post||'',r.epc||'',r.sap||'',r.damp||0,r.damp_rag||'',
+      r.wins||'',r.door||'',r.loft||'',r.cwi||'',r.ewi||''].join(',')));
+  navigator.clipboard.writeText(lines.join('\n'))
+    .then(()=>alert(`${selected.length} properties copied to clipboard as CSV`))
+    .catch(()=>alert('Copy failed — try a different browser'));
+}
+
+function renderRtPropTable(){
+  const rows=getRtPropRows();
+  const fmtYr=yr=>{
+    if(!yr) return '<span style="color:#ddd">—</span>';
+    const col=yr<=2026?'var(--red)':yr<=2030?'var(--amber-dark)':'var(--green)';
+    return `<span style="font-weight:600;color:${col}">${yr}</span>`;
+  };
+  const epcCell=e=>{
+    if(!e) return '—';
+    return `<span style="background:${EPC_COLS[e]||'#aaa'};color:#fff;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:700">${e}</span>`;
+  };
+  const dampCol=d=>d>=3?'var(--red)':d>=1?'var(--amber-dark)':'var(--text-muted)';
+  const total=RETROFIT_DATA.prop_lookup[rtCurrentAG]?.length||0;
+
+  if(rows.length===0){
+    document.getElementById('rt-prop-table').innerHTML='<p style="font-size:11px;color:var(--text-muted);padding:10px">No properties match the current filter.</p>';
+    return;
+  }
+
+  document.getElementById('rt-prop-table').innerHTML=`
+    <table class="tbl">
+      <tr>
+        <th style="width:30px"></th>
+        <th>UPRN</th><th>Address</th><th>EPC</th><th>SAP</th>
+        <th>Damp Repairs</th><th>Damp RAG</th>
+        <th>Windows</th><th>Front Door</th><th>Loft Ins</th><th>CWI</th><th>EWI</th>
+      </tr>
+      ${rows.map(r=>`<tr style="cursor:pointer;background:${rtSelectedUPRNs.has(r.uprn)?'#EEF7F0':''}">
+        <td style="text-align:center">
+          <input type="checkbox" ${rtSelectedUPRNs.has(r.uprn)?'checked':''} 
+            onclick="event.stopPropagation();rtToggleProp('${r.uprn}')">
+        </td>
+        <td style="font-family:monospace;font-size:9px" onclick="rtToggleProp('${r.uprn}')">${r.uprn}</td>
+        <td style="font-size:10px" onclick="rtToggleProp('${r.uprn}')">${r.addr||'—'}</td>
+        <td onclick="rtToggleProp('${r.uprn}')">${epcCell(r.epc)}</td>
+        <td style="text-align:center;font-size:10px" onclick="rtToggleProp('${r.uprn}')">${r.sap||'—'}</td>
+        <td style="text-align:center;font-weight:600;color:${dampCol(r.damp||0)}" onclick="rtToggleProp('${r.uprn}')">${r.damp||0}</td>
+        <td style="text-align:center" onclick="rtToggleProp('${r.uprn}')">${rag_pill(r.damp_rag||'Green')}</td>
+        <td style="text-align:center" onclick="rtToggleProp('${r.uprn}')">${fmtYr(r.wins)}</td>
+        <td style="text-align:center" onclick="rtToggleProp('${r.uprn}')">${fmtYr(r.door)}</td>
+        <td style="text-align:center" onclick="rtToggleProp('${r.uprn}')">${fmtYr(r.loft)}</td>
+        <td style="text-align:center" onclick="rtToggleProp('${r.uprn}')">${fmtYr(r.cwi)}</td>
+        <td style="text-align:center" onclick="rtToggleProp('${r.uprn}')">${fmtYr(r.ewi)}</td>
+      </tr>`).join('')}
+    </table>
+    <div style="font-size:10px;color:var(--text-muted);padding:4px">
+      Showing ${rows.length} of ${total} properties · click row or checkbox to select for programme
+    </div>`;
+}
+
+// PAGE 4 — STOCK CONDITION
+// ════════════════════════════════════════════════════════════════════
+const SC_DATA = /*INJECT_SC_DATA*/{};
+const PROP_LOOKUP = /*INJECT_PROP_LOOKUP*/{};
+const DAMP_REPAIRS = /*INJECT_DAMP_REPAIRS*/{};
+const TOP10_WORST = /*INJECT_TOP10_WORST*/[];
+const PROGRAMME_DATA = /*INJECT_PROGRAMME_DATA*/{};
+const DECENT_HOMES = /*INJECT_DECENT_HOMES*/{};
+const BLOCK_DATA  = /*INJECT_BLOCK_DATA*/{};
+const RETROFIT = /*INJECT_RETROFIT*/[];
+const RETROFIT_DATA = /*INJECT_RETROFIT_DATA*/{};
+const SC_ROWS = SC_DATA.rows;
+const SC_KPIS = SC_DATA.kpis;
+
+let sc_status_filter='all', sc_cons_filter='all', sc_elem_filter='all', sc_search_='';
+
+const CONS_COLOURS = {
+  'FFT':'#2E8B67','Potter Raper':'#7B4CA0','Martin Arnold':'#C95C3A',
+  'Savills':'#1B5E45','Savills, CB':'#1B5E45','Historic':'#888','Internal/Other':'#ADB5BD'
+};
+const CONS_BG = {
+  'FFT':'#E8F4EE','Potter Raper':'#F3E8FF','Martin Arnold':'#F8D7DA',
+  'Savills':'#D4EDDA','Historic':'#F5F5F5','Internal/Other':'#F5F5F5'
+};
+const STATUS_COL = {
+  'Current':'var(--green)','Partial':'var(--amber-dark)',
+  'Overdue':'var(--red)','Not surveyed':'var(--text-muted)'
+};
+const STATUS_PILL = {
+  'Current':'<span class="pill pill-g">Current</span>',
+  'Partial':'<span class="pill pill-a">Partial</span>',
+  'Overdue':'<span class="pill pill-r">Overdue</span>',
+  'Not surveyed':'<span style="background:#eee;color:#888;border-radius:20px;padding:2px 8px;font-size:10px;font-weight:600">Not surveyed</span>'
+};
+const ELEM_LABELS = {
+  'bathroom_due':'Bathroom','kitchen_due':'Kitchen','roof_due':'Roof',
+  'heating_due':'Heating / boiler','electrical_due':'Electrical',
+  'windows_due':'Windows','doors_due':'Doors'
+};
+const ELEM_COLOURS = ['#7B4CA0','#E05C9A','#C95C3A','#2563EB','#B45309','#2E8B67','#1B5E45'];
+
+function scFilteredRows() {
+  return SC_ROWS.filter(r => {
+    if(sc_status_filter!=='all' && r.status!==sc_status_filter) return false;
+    if(sc_cons_filter!=='all') {
+      const cd = r.cons_detail||{};
+      if(!Object.keys(cd).includes(sc_cons_filter) && r.consultant!==sc_cons_filter) return false;
+    }
+    if(sc_elem_filter!=='all' && (r[sc_elem_filter]||9999)>2030) return false;
+    if(sc_search_ && !r.ag.toLowerCase().includes(sc_search_.toLowerCase())) return false;
+    return true;
+  });
+}
+
+function initStockCondition() {
+  renderScKpis();
+  renderScDonut(SC_ROWS);
+  renderScYearBars(SC_ROWS);
+  renderScConsCards(SC_ROWS);
+  renderScElemBars(SC_ROWS);
+  renderScHorizon(SC_ROWS);
+  renderScTable(SC_ROWS);
+}
+
+function renderScKpis() {
+  const rows=scFilteredRows();
+  const total=rows.reduce((s,r)=>s+r.total,0);
+  const surv=rows.reduce((s,r)=>s+r.surveyed,0);
+  const elems=Object.values(SC_KPIS.flagged_5yr).reduce((a,b)=>a+b,0);
+  document.getElementById('sc-kpis').innerHTML=[
+    {label:'Total Asset Groups',val:rows.length,sub:'in stock condition scope'},
+    {label:'Fully / Partially Surveyed',val:rows.filter(r=>r.status==='Current').length,col:'var(--green)',sub:'survey complete & current'},
+    {label:'Partial / Overdue',val:rows.filter(r=>r.status==='Partial'||r.status==='Overdue').length,col:'var(--amber-dark)',sub:'surveyed pre-2019 or incomplete'},
+    {label:'Not Yet Surveyed',val:rows.filter(r=>r.status==='Not surveyed').length,col:'var(--red)',sub:'no survey on record'},
+    {label:'Elements Flagged Due',val:elems,sub:'replacement within 5 years'},
+  ].map(k=>`<div class="kpi" style="border-left-color:${k.col||'var(--green)'}">
+    <div class="kpi-label">${k.label}</div>
+    <div class="kpi-val" style="color:${k.col||'var(--green)'}">${k.val}</div>
+    <div class="kpi-sub">${k.sub}</div></div>`).join('');
+}
+
+function renderScDonut(rows) {
+  const cur=rows.filter(r=>r.status==='Current').length;
+  const par=rows.filter(r=>r.status==='Partial').length;
+  const ovd=rows.filter(r=>r.status==='Overdue').length;
+  const not=rows.filter(r=>r.status==='Not surveyed').length;
+  const total=rows.length||1;
+  const pct=Math.round(cur/total*100);
+  document.getElementById('sc-donut-pct').textContent=pct+'%';
+
+  // Draw donut using canvas
+  const canvas=document.getElementById('sc-donut');
+  const ctx=canvas.getContext('2d');
+  const cx=45,cy=45,r=38,iR=24;
+  const segs=[
+    {val:cur,col:'#1B5E45'},{val:par,col:'#F9C74F'},
+    {val:ovd,col:'#C95C3A'},{val:not,col:'#CCC'}
+  ];
+  ctx.clearRect(0,0,90,90);
+  let angle=-Math.PI/2;
+  segs.forEach(s=>{
+    if(s.val===0) return;
+    const sweep=s.val/total*2*Math.PI;
+    ctx.beginPath();ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,r,angle,angle+sweep);
+    ctx.closePath();ctx.fillStyle=s.col;ctx.fill();
+    angle+=sweep;
+  });
+  ctx.beginPath();ctx.arc(cx,cy,iR,0,2*Math.PI);ctx.fillStyle='#fff';ctx.fill();
+
+  document.getElementById('sc-donut-legend').innerHTML=[
+    {col:'#1B5E45',label:'Fully surveyed',val:cur},
+    {col:'#F9C74F',label:'Partial / overdue',val:par},
+    {col:'#C95C3A',label:'Not surveyed',val:ovd+not},
+  ].map(l=>`<div style="display:flex;align-items:center;gap:6px">
+    <div style="width:10px;height:10px;border-radius:2px;background:${l.col};flex-shrink:0"></div>
+    <span>${l.label}</span><span style="font-weight:600;margin-left:auto;padding-left:10px">${l.val}</span>
+  </div>`).join('');
+}
+
+function renderScYearBars(rows) {
+  const buckets=[
+    {label:'2017 or before',test:r=>r.last_survey&&r.last_survey<=2017},
+    {label:'2019–2021',test:r=>r.last_survey&&r.last_survey>=2019&&r.last_survey<=2021},
+    {label:'2022–2023',test:r=>r.last_survey&&r.last_survey>=2022&&r.last_survey<=2023},
+    {label:'2024–2025',test:r=>r.last_survey&&r.last_survey>=2024&&r.last_survey<=2025},
+    {label:'2026',test:r=>r.last_survey===2026},
+    {label:'Not surveyed',test:r=>!r.last_survey},
+  ];
+  const maxV=Math.max(...buckets.map(b=>rows.filter(b.test).length),1);
+  const cols=['#C95C3A','#F9C74F','#2E8B67','#1B5E45','#163D2D','#CCC'];
+  document.getElementById('sc-year-bars').innerHTML=buckets.map((b,i)=>{
+    const count=rows.filter(b.test).length;
+    const w=Math.round(count/maxV*100);
+    return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+      <span style="font-size:10px;color:var(--text-muted);width:90px;text-align:right;flex-shrink:0">${b.label}</span>
+      <div style="flex:1;background:var(--off-white);border-radius:3px;height:12px">
+        <div style="width:${w}%;height:100%;background:${cols[i]};border-radius:3px"></div>
+      </div>
+      <span style="font-size:10px;font-weight:600;width:24px;text-align:right">${count}</span>
+      <span style="font-size:9px;color:var(--text-muted)">groups</span>
+    </div>`;
+  }).join('');
+}
+
+function renderScConsCards(rows) {
+  const cons_groups = {};
+  rows.forEach(r => {
+    const cd = r.cons_detail||{};
+    const mainCons = Object.keys(cd).length>0 ? Object.entries(cd).sort((a,b)=>b[1]-a[1])[0][0] : (r.consultant||'Internal/Other');
+    const consKey = ['FFT','Potter Raper','Martin Arnold','Savills'].includes(mainCons) ? mainCons : 'Internal/Other';
+    if(!cons_groups[consKey]) cons_groups[consKey]={ags:[],surveyed:0,overdue:0,not_done:0};
+    cons_groups[consKey].ags.push(r.ag);
+    if(r.status==='Current') cons_groups[consKey].surveyed++;
+    else if(r.status==='Overdue') cons_groups[consKey].overdue++;
+    else if(r.status==='Not surveyed'||r.status==='Partial') cons_groups[consKey].not_done++;
+  });
+
+  const order=['FFT','Potter Raper','Martin Arnold','Savills'];
+  document.getElementById('sc-consultant-cards').innerHTML=order.filter(c=>cons_groups[c]).map(c=>{
+    const g=cons_groups[c];
+    const total=g.ags.length;
+    const col=CONS_COLOURS[c]||'#888';
+    const bg=CONS_BG[c]||'#f5f5f5';
+    const surW=Math.round(g.surveyed/total*100);
+    const ovW=Math.round(g.overdue/total*100);
+    const ndW=100-surW-ovW;
+    const areas=g.ags.slice(0,4).map(a=>a.split(' ')[0]).join(', ')+(g.ags.length>4?'…':'');
+    return `<div style="background:${bg};border-radius:8px;padding:10px 12px;border-left:3px solid ${col}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-size:12px;font-weight:600;color:${col}">${c}</span>
+        <span style="font-size:11px;color:var(--text-muted)">${total} asset groups</span>
+      </div>
+      <div style="display:flex;gap:6px;margin-bottom:6px">
+        <span style="background:#D4EDDA;color:#155724;border-radius:20px;padding:2px 8px;font-size:10px;font-weight:600">${g.surveyed} surveyed</span>
+        <span style="background:#FFF3CD;color:#856404;border-radius:20px;padding:2px 8px;font-size:10px;font-weight:600">${g.overdue} overdue</span>
+        <span style="background:#F8D7DA;color:#721C24;border-radius:20px;padding:2px 8px;font-size:10px;font-weight:600">${g.not_done} not done</span>
+      </div>
+      <div style="height:6px;border-radius:3px;overflow:hidden;display:flex;background:var(--off-white)">
+        <div style="width:${surW}%;background:var(--green)"></div>
+        <div style="width:${ovW}%;background:var(--amber)"></div>
+        <div style="width:${ndW}%;background:var(--red)"></div>
+      </div>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:5px">Areas: ${areas}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderScElemBars(rows) {
+  const elems=['bathroom_due','kitchen_due','roof_due','heating_due','electrical_due','windows_due','doors_due'];
+  const maxV=Math.max(...elems.map(e=>rows.filter(r=>(r[e]||9999)<=2030).length),1);
+  document.getElementById('sc-elem-bars').innerHTML=elems.map((e,i)=>{
+    const count=rows.filter(r=>(r[e]||9999)<=2030).length;
+    const w=Math.round(count/maxV*100);
+    return `<div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:11px;color:var(--text-muted);width:100px;text-align:right;flex-shrink:0">${ELEM_LABELS[e]}</span>
+      <div style="flex:1;background:var(--off-white);border-radius:3px;height:14px">
+        <div style="width:${w}%;height:100%;background:${ELEM_COLOURS[i]};border-radius:3px"></div>
+      </div>
+      <span style="font-size:11px;font-weight:600;width:28px;text-align:right">${count}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderScHorizon(rows) {
+  const years=[2025,2026,2027,2028,2029,2030];
+  const allElems=['bathroom_due','kitchen_due','roof_due','heating_due','electrical_due','windows_due','doors_due'];
+  const horizon_cols=['#C95C3A','#C97C3A','#F9C74F','#C8D96B','#2E8B67','#1B5E45'];
+  const counts=years.map(yr=>({yr,count:rows.reduce((s,r)=>s+allElems.filter(e=>r[e]===yr).length,0)}));
+  const maxC=Math.max(...counts.map(c=>c.count),1);
+  const container=document.getElementById('sc-horizon-bars');
+  container.innerHTML=counts.map((c,i)=>`
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px">
+      <span style="font-size:9px;color:var(--text-muted)">${c.count}</span>
+      <div style="width:100%;background:${horizon_cols[i]};height:${Math.max(c.count/maxC*60,4)}px;border-radius:4px 4px 0 0"></div>
+      <span style="font-size:9px;color:var(--text-muted)">${c.yr}</span>
+    </div>`).join('');
+  container.insertAdjacentHTML('afterend','<p style="font-size:10px;color:var(--text-muted);margin-top:4px">No. of elements reaching replacement year</p>');
+}
+
+function renderScTable(rows) {
+  const filtered=rows.filter(r=>{
+    if(sc_status_filter!=='all'&&r.status!==sc_status_filter) return false;
+    if(sc_cons_filter!=='all'){const cd=r.cons_detail||{};if(!Object.keys(cd).includes(sc_cons_filter)&&r.consultant!==sc_cons_filter)return false;}
+    if(sc_elem_filter!=='all'&&(r[sc_elem_filter]||9999)>2030) return false;
+    if(sc_search_&&!r.ag.toLowerCase().includes(sc_search_.toLowerCase())) return false;
+    return true;
+  });
+
+  const fmtYr=(yr,emph)=>{
+    if(!yr) return '<span style="color:var(--text-muted)">Unknown</span>';
+    const col=yr<=2026?'var(--red)':yr<=2028?'var(--amber-dark)':'var(--green)';
+    return `<span style="font-weight:600;color:${col}">${yr}</span>`;
+  };
+
+  const fmtCons=c=>{
+    const col=CONS_COLOURS[c]||CONS_COLOURS['Internal/Other'];
+    const bg=CONS_BG[c]||'#F5F5F5';
+    if(['FFT','Potter Raper','Martin Arnold','Savills'].includes(c))
+      return `<span style="background:${bg};color:${col};padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;white-space:nowrap">${c}</span>`;
+    return `<span style="font-size:10px;color:var(--text-muted)">${c}</span>`;
+  };
+
+  document.getElementById('sc-table').innerHTML=`
+    <table class="tbl">
+      <tr>
+        <th>Asset group</th><th>Consultant</th><th>Total homes</th><th>Surveyed</th>
+        <th>Not surveyed</th><th>Last survey</th><th>Survey status</th>
+        <th>Bathroom due</th><th>Kitchen due</th><th>Roof due</th>
+        <th>Heating due</th><th>Electrical due</th><th></th>
+      </tr>
+      ${filtered.slice(0,100).map(r=>{
+        const surW=Math.round((r.surveyed||0)/Math.max(r.total,1)*100);
+        const progBar=`<div style="display:flex;align-items:center;gap:5px">
+          <div style="width:50px;background:var(--off-white);border-radius:3px;height:8px;overflow:hidden">
+            <div style="width:${surW}%;height:100%;background:${r.overdue>r.current?'var(--amber)':'var(--green)'}"></div>
+          </div>
+          <span>${r.surveyed}</span>
+        </div>`;
+        // Get best consultant from cons_detail
+        const cd=r.cons_detail||{};
+        const mainC=Object.keys(cd).length>0?Object.entries(cd).sort((a,b)=>b[1]-a[1])[0][0]:r.consultant;
+        return `<tr onclick="scOpenDrill(${JSON.stringify(r).replace(/"/g,'&quot;')})">
+          <td style="font-size:10px;font-weight:500">${r.ag}</td>
+          <td>${fmtCons(mainC)}</td>
+          <td>${r.total}</td>
+          <td>${progBar}</td>
+          <td style="color:${r.not_surveyed>0?'var(--red)':'var(--text-muted)'}">${r.not_surveyed}</td>
+          <td style="color:${r.last_survey&&r.last_survey<=2018?'var(--red)':r.last_survey&&r.last_survey<=2021?'var(--amber-dark)':'var(--green)'}">${r.last_survey||'None'}</td>
+          <td>${STATUS_PILL[r.status]||r.status}</td>
+          <td>${fmtYr(r.bathroom_due)}</td>
+          <td>${fmtYr(r.kitchen_due)}</td>
+          <td>${fmtYr(r.roof_due)}</td>
+          <td>${fmtYr(r.heating_due)}</td>
+          <td>${fmtYr(r.electrical_due)}</td>
+          <td style="color:var(--green);font-size:10px;white-space:nowrap">View →</td>
+        </tr>`;
+      }).join('')}
+    </table>
+    <div style="font-size:11px;color:var(--text-muted);padding:8px 0">Showing ${Math.min(filtered.length,100)} of ${filtered.length} asset groups</div>`;
+}
+
+function scOpenDrill(r) {
+  if(typeof r==='string') r=JSON.parse(r);
+  document.getElementById('sc-drill').classList.add('open');
+  document.getElementById('sc-drill-title').textContent=r.ag;
+
+  // Meta
+  const cd=r.cons_detail||{};
+  const consStr=Object.entries(cd).length>0?Object.entries(cd).map(([k,v])=>`${k}: ${v} properties`).join('<br>'):'Internal/Other';
+  document.getElementById('sc-drill-meta').innerHTML=`
+    <div style="display:flex;flex-direction:column;gap:6px;font-size:11px">
+      <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)">
+        <span style="color:var(--text-muted)">Total homes</span><strong>${r.total}</strong>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)">
+        <span style="color:var(--text-muted)">Surveyed</span><strong style="color:var(--green)">${r.surveyed}</strong>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)">
+        <span style="color:var(--text-muted)">Not surveyed</span><strong style="color:${r.not_surveyed>0?'var(--red)':'inherit'}">${r.not_surveyed}</strong>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)">
+        <span style="color:var(--text-muted)">Current surveys</span><strong>${r.current}</strong>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)">
+        <span style="color:var(--text-muted)">Overdue (pre-2019)</span><strong style="color:${r.overdue>0?'var(--amber-dark)':'inherit'}">${r.overdue}</strong>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)">
+        <span style="color:var(--text-muted)">Last survey year</span><strong>${r.last_survey||'None'}</strong>
+      </div>
+      <div style="padding:5px 0">
+        <span style="color:var(--text-muted);display:block;margin-bottom:4px">Consultants</span>
+        <div style="font-size:11px;line-height:1.8">${consStr}</div>
+      </div>
+    </div>`;
+
+  // Elements
+  const elems=[
+    {key:'bathroom_due',label:'Bathroom'},
+    {key:'kitchen_due',label:'Kitchen'},
+    {key:'roof_due',label:'Roof'},
+    {key:'heating_due',label:'Heating / boiler'},
+    {key:'electrical_due',label:'Electrical'},
+    {key:'windows_due',label:'Windows'},
+    {key:'doors_due',label:'Doors'},
+  ];
+  document.getElementById('sc-drill-elements').innerHTML=`
+    <table class="tbl">
+      <tr><th>Element</th><th>Earliest Year Due</th><th>Status</th></tr>
+      ${elems.map(e=>{
+        const yr=r[e.key];
+        const col=!yr?'var(--text-muted)':yr<=2026?'var(--red)':yr<=2028?'var(--amber-dark)':'var(--green)';
+        const status=!yr?'Unknown':yr<=2026?'<span class="pill pill-r">Overdue</span>':yr<=2028?'<span class="pill pill-a">Urgent</span>':yr<=2030?'<span class="pill pill-a">Due ≤2030</span>':'<span class="pill pill-g">Planned</span>';
+        return `<tr><td>${e.label}</td><td style="font-weight:700;color:${col}">${yr||'Unknown'}</td><td>${status}</td></tr>`;
+      }).join('')}
+    </table>
+    <div class="insight" style="margin-top:10px">
+      <strong>Data note</strong>
+      <p>Year due figures reflect the earliest replacement year recorded across all surveyed properties in this asset group. Properties surveyed before 2019 are considered overdue — replacement years from those surveys should be treated with caution as data may be stale.</p>
+    </div>`;
+
+  document.getElementById('sc-drill').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function scFilter(type, val, el) {
+  if(type==='status'){sc_status_filter=val; document.querySelectorAll('#page-stockcondition .filter-bar:nth-child(1) .fpill').forEach(p=>p.classList.remove('on'));}
+  if(type==='cons'){sc_cons_filter=val; document.querySelectorAll('#page-stockcondition .filter-bar:nth-child(2) .fpill').forEach(p=>p.classList.remove('on'));}
+  if(type==='elem'){sc_elem_filter=val; document.querySelectorAll('#page-stockcondition .filter-bar:nth-child(3) .fpill').forEach(p=>p.classList.remove('on'));}
+  if(el) el.classList.add('on');
+  const rows=scFilteredRows();
+  renderScKpis();
+  renderScDonut(rows);
+  renderScYearBars(rows);
+  renderScConsCards(rows);
+  renderScTable(rows);
+}
+
+function scSearch(val) { sc_search_=val; renderScTable(scFilteredRows()); }
+
+// Init first page on load
+window.addEventListener('load',()=>{ initOverview(); window._ov_init=true; });
+
+// ════════════════════════════════════════════════════════
+// PAGE 5 — BLOCK & COMPLIANCE
+// ════════════════════════════════════════════════════════
+
+let blkMap, blkMarkers = [], blkFilterMode = 'all', blkSearchVal = '', blkSortCol = 'priority_score', blkSortDir = -1;
+
+function initBlocks() {
+  const bd = BLOCK_DATA;
+  if(!bd || !bd.blocks) return;
+
+  // Populate ward dropdown
+  const wards = [...new Set(bd.blocks.map(b=>b.ward).filter(Boolean))].sort();
+  const sel = document.getElementById('blk-ward-sel');
+  wards.forEach(w => { const o=document.createElement('option'); o.value=w; o.textContent=w; sel.appendChild(o); });
+
+  // Enrich blocks with component data
+  const compSumByBlock = {};
+  (bd.comp_summary||[]).forEach(r => {
+    if(!compSumByBlock[r.Block_Name_Asset]) compSumByBlock[r.Block_Name_Asset] = {};
+    compSumByBlock[r.Block_Name_Asset][r.Block_Category] = r;
+  });
+  bd.blocks.forEach(b => { b._comps = compSumByBlock[b.block] || {}; });
+
+  // Priority score: count of categories with Year Due <= 2030
+  const CATS = ['Access & Security','Roof & Structure','Balconies & Rails','Communal Heating','Electrical','Fire Safety','Windows'];
+  bd.blocks.forEach(b => {
+    let score = 0;
+    CATS.forEach(cat => {
+      if(b._comps[cat] && b._comps[cat].min_yr && b._comps[cat].min_yr <= 2030) score++;
+    });
+    b.priority_score = score;
+    b.has_data = Object.keys(b._comps).length > 0;
+  });
+
+  // KPIs
+  const total = bd.blocks.length;
+  const highrise = bd.blocks.filter(b=>b.is_high_rise).length;
+  const registered = bd.blocks.filter(b=>b.is_registered).length;
+  const highPriority = bd.blocks.filter(b=>b.priority_score >= 2).length;
+  const withData = bd.blocks.filter(b=>b.has_data).length;
+
+  document.getElementById('blk-kpis').innerHTML = [
+    {label:'Total Blocks',val:total,sub:'all block types',col:'var(--green-dark)'},
+    {label:'High-Rise',val:highrise,sub:'18m+ or 7+ storeys',col:'#7B3F00'},
+    {label:'BSR Registered',val:registered,sub:'Building Safety Regulator',col:'#1A3A5C'},
+    {label:'High Priority',val:highPriority,sub:'2+ categories due ≤2030',col:'var(--red)'},
+    {label:'With Survey Data',val:withData,sub:'Keystone REP coverage',col:'var(--green)'},
+  ].map(k=>`<div class="kpi-card">
+    <div class="kpi-label">${k.label}</div>
+    <div class="kpi-val" style="color:${k.col}">${k.val.toLocaleString()}</div>
+    <div class="kpi-sub">${k.sub}</div>
+  </div>`).join('');
+
+  // Init map
+  if(!blkMap) {
+    blkMap = L.map('blk-map').setView([51.485,-0.005],11);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{attribution:'© CartoDB',maxZoom:19}).addTo(blkMap);
+  }
+
+  renderBlkTable();
+  renderBlkMap();
+}
+
+function getBlkRows() {
+  const bd = BLOCK_DATA;
+  if(!bd || !bd.blocks) return [];
+  let rows = [...bd.blocks];
+  if(blkFilterMode==='high') rows = rows.filter(b=>b.is_high_rise);
+  if(blkFilterMode==='registered') rows = rows.filter(b=>b.is_registered);
+  const ward = document.getElementById('blk-ward-sel')?.value;
+  if(ward) rows = rows.filter(b=>b.ward===ward);
+  if(blkSearchVal) rows = rows.filter(b=>b.block.toLowerCase().includes(blkSearchVal.toLowerCase()));
+  return rows.sort((a,b) => blkSortDir * ((b[blkSortCol]||0) - (a[blkSortCol]||0)));
+}
+
+function blkFilter(mode,el) {
+  blkFilterMode=mode;
+  document.querySelectorAll('#page-blocks .pill-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderBlkTable(); renderBlkMap();
+}
+function blkWardFilter() { renderBlkTable(); renderBlkMap(); }
+function blkSearch(v) { blkSearchVal=v; renderBlkTable(); renderBlkMap(); }
+function blkSort(col) {
+  if(blkSortCol===col) blkSortDir*=-1; else { blkSortCol=col; blkSortDir=-1; }
+  renderBlkTable();
+}
+
+function sizeLabel(s) {
+  if(!s) return '—';
+  if(s==='High'||s==='HIgh') return '<span style="background:#7B3F00;color:#fff;padding:2px 6px;border-radius:4px;font-size:10px">High-rise</span>';
+  if(s==='Medium') return '<span style="background:#1A3A5C;color:#fff;padding:2px 6px;border-radius:4px;font-size:10px">Medium</span>';
+  return '<span style="background:#aaa;color:#fff;padding:2px 6px;border-radius:4px;font-size:10px">Low</span>';
+}
+
+function yrCell(yr) {
+  if(!yr) return '<span style="color:#ccc">—</span>';
+  const col = yr<=2026?'var(--red)':yr<=2028?'#c07000':yr<=2030?'var(--amber-dark)':'var(--green)';
+  return `<span style="font-weight:700;color:${col}">${yr}</span>`;
+}
+
+function priorityBar(score) {
+  const col = score>=3?'var(--red)':score>=2?'var(--amber-dark)':score>=1?'#888':'#ddd';
+  const bars = Array.from({length:7},(_,i)=>`<span style="display:inline-block;width:8px;height:14px;border-radius:2px;margin-right:1px;background:${i<score?col:'#e0e0e0'}"></span>`).join('');
+  return `<span title="${score} categories due ≤2030">${bars}</span>`;
+}
+
+const CATS_SHORT = {
+  'Access & Security':'🚪 Access',
+  'Roof & Structure': '🏗 Roof',
+  'Balconies & Rails':'🏛 Balc',
+  'Communal Heating': '🌡 Heat',
+  'Electrical':       '⚡ Elec',
+  'Fire Safety':      '🔥 Fire',
+  'Windows':          '🪟 Win',
+};
+
+function renderBlkTable() {
+  const rows = getBlkRows();
+  const arrow = k => k===blkSortCol?(blkSortDir===-1?'▼':'▲'):'<span style="opacity:0.3">⇅</span>';
+  const CATS = ['Access & Security','Roof & Structure','Balconies & Rails','Communal Heating','Electrical','Fire Safety','Windows'];
+
+  document.getElementById('blk-table').innerHTML = `
+    <table class="tbl">
+      <tr>
+        <th style="cursor:pointer" onclick="blkSort('priority_score')">Priority ${arrow('priority_score')}</th>
+        <th>Block</th>
+        <th style="cursor:pointer" onclick="blkSort('block_size')">Type ${arrow('block_size')}</th>
+        <th style="cursor:pointer" onclick="blkSort('ward')">Ward ${arrow('ward')}</th>
+        <th style="cursor:pointer" onclick="blkSort('total_props')">Props ${arrow('total_props')}</th>
+        ${CATS.map(c=>`<th title="${c}" style="font-size:9px;cursor:pointer" onclick="blkSort('_${c.replace(/[^a-z]/gi,'_')}')">${CATS_SHORT[c]||c}</th>`).join('')}
+      </tr>
+      ${rows.map(b=>{
+        const catCells = CATS.map(cat => {
+          const cd = b._comps[cat];
+          return `<td style="text-align:center">${cd && cd.min_yr ? yrCell(cd.min_yr) : '<span style="color:#ddd">—</span>'}</td>`;
+        }).join('');
+        const bsrIcon = b.bsr_number
+          ? `<span title="BSR: ${b.bsr_number}" style="color:#1A3A5C;font-size:11px">🏢</span>`
+          : '';
+        return `<tr onclick="openBlkDrill('${b.block.replace(/'/g,"\'")}')">
+          <td>${priorityBar(b.priority_score)} <span style="font-size:10px;color:var(--text-muted)">${b.priority_score}/${CATS.length}</span></td>
+          <td style="font-size:10px;font-weight:600">${b.block} ${bsrIcon}</td>
+          <td>${sizeLabel(b.block_size)}</td>
+          <td style="font-size:10px">${b.ward||'—'}</td>
+          <td style="text-align:center">${b.total_props||0}</td>
+          ${catCells}
+        </tr>`;
+      }).join('')}
+    </table>
+    <div style="font-size:10px;color:var(--text-muted);padding:4px">Showing ${rows.length} of ${BLOCK_DATA.blocks.length} blocks · Year Due colours: <span style="color:var(--red)">■</span> ≤2026 <span style="color:var(--amber-dark)">■</span> ≤2030</div>`;
+}
+
+function renderBlkMap() {
+  if(!blkMap) return;
+  blkMarkers.forEach(m=>blkMap.removeLayer(m));
+  blkMarkers=[];
+  const rows = getBlkRows().filter(b=>b.lat && b.lon);
+  rows.forEach(b => {
+    const col = b.priority_score>=3?'#E53E3E':b.priority_score>=2?'#D97706':b.priority_score>=1?'#4A5568':'#48BB78';
+    const size = b.is_high_rise?14:b.block_size==='Medium'?10:7;
+    const marker = L.circleMarker([b.lat,b.lon],{radius:size,fillColor:col,color:'#fff',weight:1.5,fillOpacity:0.85})
+      .addTo(blkMap)
+      .bindPopup(`<b>${b.block}</b><br>
+        Type: ${b.block_size||'—'} · Props: ${b.total_props}<br>
+        Priority: ${b.priority_score}/7 categories due ≤2030<br>
+        ${b.bsr_number?'BSR: '+b.bsr_number:''}`);
+    marker.on('click', () => openBlkDrill(b.block));
+    blkMarkers.push(marker);
+  });
+}
+
+function openBlkDrill(blockName) {
+  const bd = BLOCK_DATA;
+  const b = bd.blocks.find(x=>x.block===blockName);
+  if(!b) return;
+
+  document.getElementById('blk-drill-title').textContent = blockName;
+
+  // Meta row
+  const metaItems = [
+    b.block_size ? `<span>Type: <b>${b.block_size==='HIgh'?'High':b.block_size}-rise</b></span>` : '',
+    b.ward ? `<span>Ward: <b>${b.ward}</b></span>` : '',
+    b.asset_group ? `<span>Asset Group: <b>${b.asset_group}</b></span>` : '',
+    `<span>Properties: <b>${b.total_props}</b></span>`,
+    b.bsr_number ? `<span style="color:#1A3A5C;font-weight:700">BSR: <span style="font-family:monospace">${b.bsr_number}</span></span>` : '',
+    b.is_high_rise && !b.bsr_number ? `<span style="color:var(--red)">⚠ High-rise — not BSR registered</span>` : '',
+  ].filter(Boolean).join(' · ');
+  document.getElementById('blk-drill-meta').innerHTML = metaItems;
+
+  // Component detail table
+  const compDetail = (bd.comp_detail||[]).filter(r=>r.Block_Name_Asset===blockName)
+    .sort((a,b)=>(a.min_yr||9999)-(b.min_yr||9999));
+
+  const CATS = ['Access & Security','Roof & Structure','Balconies & Rails','Communal Heating','Electrical','Fire Safety','Windows'];
+  const catColours = {
+    'Access & Security':'#7B3F00','Roof & Structure':'#4A5568',
+    'Balconies & Rails':'#6D28D9','Communal Heating':'#C95C3A',
+    'Electrical':'#2563EB','Fire Safety':'#E53E3E','Windows':'#0891B2'
+  };
+
+  document.getElementById('blk-drill-comps').innerHTML = compDetail.length === 0
+    ? '<p style="font-size:11px;color:var(--text-muted);padding:10px">No communal component data available for this block.</p>'
+    : `<table class="tbl">
+        <tr><th>Component</th><th>Category</th><th>Year Due</th><th>Last Survey</th><th>Surveyor</th><th>Records</th><th>Notes</th></tr>
+        ${compDetail.map(r=>{
+          const catCol = catColours[r.category]||'#666';
+          const note = r.sample_note ? `<span style="font-size:9px;color:var(--text-muted)" title="${r.sample_note}">${r.sample_note.substring(0,60)}${r.sample_note.length>60?'…':''}</span>` : '—';
+          const progBadge = r.is_programme
+            ? `<span title="All/most flats share same renewal year — treated as block programme (${r.coverage_pct||''}% coverage)" style="background:#EEF2FF;color:#1A3A5C;padding:1px 4px;border-radius:3px;font-size:8px;margin-left:4px">📋 Programme</span>`
+            : '';
+          return `<tr>
+            <td style="font-size:10px;font-weight:600">${r.Component}${progBadge}</td>
+            <td><span style="background:${catCol}20;color:${catCol};padding:1px 6px;border-radius:4px;font-size:9px;font-weight:600">${r.category||'—'}</span></td>
+            <td style="text-align:center">${r.min_yr ? yrCell(r.min_yr) : '—'}</td>
+            <td style="text-align:center;font-size:10px">${r.last_survey||'—'}</td>
+            <td style="font-size:10px">${r.surveyor||'—'}</td>
+            <td style="text-align:center;font-size:10px">${r.records||0}</td>
+            <td style="font-size:9px;max-width:200px">${note}</td>
+          </tr>`;
+        }).join('')}
+      </table>`;
+
+  // Properties table (from PROP_LOOKUP if available, else from master)
+  const props = PROP_LOOKUP ? Object.values(PROP_LOOKUP).flat().filter(p=>false) : []; // placeholder
+  // Actually need to filter by block - build block->props from DATA
+  const blockProps = DATA.filter ? [] : []; // DATA is by asset group not block
+
+  // Statutory compliance cards
+  const complianceItems = [
+    {label:'Fire Risk Assessment', icon:'🔥', key:'fire_risk'},
+    {label:'Legionella',           icon:'💧', key:'legionella'},
+    {label:'Asbestos',             icon:'⚠️',  key:'asbestos'},
+    {label:'Gas Safety',           icon:'🔧', key:'gas_safety'},
+    {label:'Electrical Safety (EICR)', icon:'⚡', key:'eicr'},
+    {label:'Lift Maintenance',     icon:'🛗', key:'lifts'},
+  ];
+  document.getElementById('blk-drill-compliance').innerHTML = complianceItems.map(item => {
+    const data = (b.compliance||{})[item.key];
+    return `<div style="border:1px solid var(--border);border-radius:8px;padding:10px">
+      <div style="font-size:12px;font-weight:700;margin-bottom:6px">${item.icon} ${item.label}</div>
+      ${data
+        ? `<div style="font-size:11px;color:var(--green)">✓ ${data.date||'On record'}</div>
+           <div style="font-size:10px;color:var(--text-muted)">${data.notes||''}</div>`
+        : `<div style="font-size:11px;color:var(--text-muted);font-style:italic">Awaiting data</div>
+           <div style="font-size:10px;color:#ccc">Not yet loaded</div>`
+      }
+    </div>`;
+  }).join('');
+
+  // Properties in block
+  const bProps = (BLOCK_DATA.block_props||{})[blockName] || [];
+  document.getElementById('blk-drill-props').innerHTML = bProps.length === 0
+    ? '<p style="font-size:11px;color:var(--text-muted);padding:6px">No property data available for this block.</p>'
+    : `<table class="tbl">
+        <tr><th>UPRN</th><th>Address</th><th>Postcode</th><th>Ownership</th></tr>
+        ${bProps.map(p=>`<tr>
+          <td style="font-family:monospace;font-size:10px">${p.u||p.uprn}</td>
+          <td style="font-size:10px">${p.a||p.addr||'—'}</td>
+          <td style="font-size:10px">${p.p||p.post||'—'}</td>
+          <td style="font-size:10px">${p.o||p.own||'—'}</td>
+        </tr>`).join('')}
+      </table>
+      <div style="font-size:10px;color:var(--text-muted);padding:4px">${bProps.length} properties in this block</div>`;
+
+  document.getElementById('blk-drill').classList.add('open');
+  document.getElementById('blk-drill').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function closeBlkDrill() {
+  document.getElementById('blk-drill').classList.remove('open');
+}
+
+
+// ════════════════════════════════════════════════════════
+
+
+function toggleWorkOrders(uprn) {
+  const key = uprn.replace(/^0+/, '');
+  const woRow  = document.getElementById('wo-' + uprn);
+  const woTbl  = document.getElementById('wo-tbl-' + uprn);
+  if(!woRow) return;
+
+  const isOpen = woRow.style.display !== 'none';
+  // Close any other open ones first
+  document.querySelectorAll('[id^="wo-"]').forEach(el => {
+    if(el.id.startsWith('wo-') && !el.id.startsWith('wo-tbl-')) el.style.display='none';
+  });
+
+  if(isOpen) return; // toggle closed
+
+  const repairs = DAMP_REPAIRS[key] || DAMP_REPAIRS[uprn] || [];
+  if(repairs.length === 0) {
+    woTbl.innerHTML = '<p style="font-size:11px;color:var(--text-muted)">No damp work orders found for this property.</p>';
+  } else {
+    woTbl.innerHTML = `
+      <table class="tbl">
+        <tr><th>Date</th><th>WPR Code</th><th>Work Order Description</th></tr>
+        ${repairs.map(r => `<tr>
+          <td style="white-space:nowrap;font-size:10px">${r.dt||'—'}</td>
+          <td style="text-align:center;font-size:10px;font-weight:600">${r.w||'—'}</td>
+          <td style="font-size:10px">${r.d||'—'}</td>
+        </tr>`).join('')}
+      </table>
+      <div style="font-size:10px;color:var(--text-muted);padding:4px">${repairs.length} damp work order${repairs.length===1?'':'s'}</div>`;
+  }
+  woRow.style.display = '';
+}
+
+function renderTop10(targetId) {
+  const rows = TOP10_WORST || [];
+  const el = document.getElementById(targetId || 'dm-top10-table');
+  if(!el) return;
+  if(!rows.length) {
+    el.innerHTML = '<p style="font-size:11px;color:var(--text-muted);padding:10px">No data available — run build_portal.py locally.</p>';
+    return;
+  }
+
+  const fmtYr = yr => {
+    if(!yr) return '<span style="color:#ddd">—</span>';
+    const col = yr<=2026?'var(--red)':yr<=2030?'var(--amber-dark)':'var(--green)';
+    return `<span style="font-weight:600;color:${col}">${yr}</span>`;
+  };
+  const ragDot2 = r => r==='Red'?'<span style="color:var(--red)">●</span>':
+                       r==='Amber'?'<span style="color:var(--amber-dark)">●</span>':
+                       '<span style="color:var(--green)">●</span>';
+
+  el.innerHTML = `
+    <table class="tbl">
+      <tr>
+        <th>Rank</th><th>Address</th><th>Asset Group</th><th>Ward</th>
+        <th>Damp Repairs</th><th>Total Repairs</th>
+        <th>Roof</th><th>Window</th><th>Kitchen</th><th>Bathroom</th><th>Electrical</th><th>Heating</th>
+        <th>Damp RAG</th><th>Bath RAG</th><th>Kit RAG</th>
+      </tr>
+      ${rows.map((r,i) => `<tr style="cursor:pointer" onclick="showPage('damp',document.querySelector('[onclick*=damp]'));setTimeout(()=>openDampDrill('${r.ag.replace(/'/g,"\'")}'),300)">
+        <td style="text-align:center;font-weight:700;color:var(--green-dark)">#${i+1}</td>
+        <td style="font-size:10px;font-weight:600">${r.addr}</td>
+        <td style="font-size:9px;color:var(--text-muted)">${r.ag}</td>
+        <td style="font-size:10px">${r.ward||'—'}</td>
+        <td style="text-align:center;font-weight:700;color:${r.damp>=5?'var(--red)':r.damp>=3?'var(--amber-dark)':'var(--text-muted)'}">${r.damp}</td>
+        <td style="text-align:center;font-size:10px">${r.total}</td>
+        <td style="text-align:center;font-size:10px;color:var(--text-muted)">${r.roof_r||0}</td>
+        <td style="text-align:center;font-size:10px;color:var(--text-muted)">${r.win_r||0}</td>
+        <td style="text-align:center;font-size:10px;color:var(--text-muted)">${r.kit_r||0}</td>
+        <td style="text-align:center;font-size:10px;color:var(--text-muted)">${r.bath_r||0}</td>
+        <td style="text-align:center;font-size:10px;color:var(--text-muted)">${r.elec_r||0}</td>
+        <td style="text-align:center;font-size:10px;color:var(--text-muted)">${r.heat_r||0}</td>
+        <td style="text-align:center">${ragDot2(r.damp_rag)} ${r.damp_rag}</td>
+        <td style="text-align:center">${ragDot2(r.bath_rag)} ${r.bath_rag}</td>
+        <td style="text-align:center">${ragDot2(r.kit_rag)} ${r.kit_rag}</td>
+
+      </tr>`).join('')}
+    </table>
+    <div style="font-size:10px;color:var(--text-muted);padding:4px">
+      Score = (damp repairs × 3) + RAG points + components due ≤2030 + (total repairs × 0.1) · Click any row to view asset group
+    </div>`;
+}
+
+
+// ════════════════════════════════════════════════════════
+// PAGE 6 — PROGRAMME BUILDER
+// ════════════════════════════════════════════════════════
+
+let progYear = '2026/27', progSearchVal = '', progBudgets = {};
+
+function initProgramme() {
+  const pd = PROGRAMME_DATA;
+  if(!pd || !pd.years) { console.warn('PROGRAMME_DATA missing'); return; }
+
+  // Initialise budgets from data
+  progBudgets = {...(pd.budgets || {})};
+
+  // Budget input fields
+  document.getElementById('prog-budget-inputs').innerHTML = pd.years.map(yr => `
+    <div style="display:flex;flex-direction:column;gap:4px;min-width:160px">
+      <label style="font-size:11px;font-weight:700;color:var(--green-dark)">${yr}</label>
+      <div style="display:flex;align-items:center;gap:4px">
+        <span style="font-size:12px;color:var(--text-muted)">£</span>
+        <input type="number" id="budget-${yr.replace('/','_')}"
+          value="${(progBudgets[yr]||0)}"
+          style="width:120px;padding:5px 8px;border-radius:6px;border:1px solid var(--border);font-size:11px"
+          oninput="progUpdateBudget('${yr}', this.value)"
+          placeholder="0">
+      </div>
+      <div style="font-size:10px;color:var(--text-muted)" id="budget-status-${yr.replace('/','_')}"></div>
+    </div>
+  `).join('');
+
+  // Year tabs
+  document.getElementById('prog-year-tabs').innerHTML = pd.years.map(yr =>
+    `<button class="pill-btn${yr===progYear?' active':''}" 
+      onclick="progSelectYear('${yr}',this)">${yr}</button>`
+  ).join('');
+
+  renderProgKpis();
+  progRender();
+}
+
+function progUpdateBudget(yr, val) {
+  progBudgets[yr] = parseFloat(val.replace(/,/g,'')) || 0;
+  renderProgKpis();
+  if(yr === progYear) progRender();
+}
+
+function progSelectYear(yr, el) {
+  progYear = yr;
+  document.querySelectorAll('#prog-year-tabs .pill-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('prog-table-title').textContent = `Programme — ${yr}`;
+  progRender();
+}
+
+function progSearch(v) { progSearchVal=v; progRender(); }
+
+function getProgRows() {
+  const pd = PROGRAMME_DATA;
+  const yrData = (pd.programme||{})[progYear] || {};
+  let rows = (yrData.ags || []);
+  if(progSearchVal) rows = rows.filter(r =>
+    r.ag.toLowerCase().includes(progSearchVal.toLowerCase()));
+  return rows;
+}
+
+function renderProgKpis() {
+  const pd = PROGRAMME_DATA;
+  let totalCost=0, totalAGs=0, totalProps=0;
+  (pd.years||[]).forEach(yr => {
+    const s = (pd.programme||{})[yr] || {};
+    totalCost  += s.total_cost  || 0;
+    totalAGs   += s.total_ags   || 0;
+    totalProps += s.total_props || 0;
+  });
+  const totalBudget = Object.values(progBudgets).reduce((a,b)=>a+b,0);
+
+  document.getElementById('prog-kpis').innerHTML = [
+    {label:'Total Programme Cost', val:'£'+fmtM(totalCost), sub:'across 5 years',        col:(totalCost>totalBudget?'var(--red)':'var(--green-dark)')},
+    {label:'Total Budget',         val:'£'+fmtM(totalBudget),sub:'5-year allocation',    col:'var(--green-dark)'},
+    {label:'Surplus / Deficit',    val:(totalBudget>=totalCost?'+':'')+'£'+fmtM(totalBudget-totalCost), sub:'budget vs programme cost', col:(totalBudget>=totalCost?'var(--green)':'var(--red)')},
+    {label:'Asset Groups',         val:totalAGs.toLocaleString(), sub:'with planned works', col:'var(--green-dark)'},
+    {label:'Properties Affected',  val:totalProps.toLocaleString(), sub:'across programme', col:'#2563EB'},
+  ].map(k=>`<div class="kpi-card">
+    <div class="kpi-label">${k.label}</div>
+    <div class="kpi-val" style="color:${k.col}">${k.val}</div>
+    <div class="kpi-sub">${k.sub}</div>
+  </div>`).join('');
+}
+
+function fmtM(n) {
+  if(Math.abs(n) >= 1000000) return (n/1000000).toFixed(1)+'M';
+  if(Math.abs(n) >= 1000) return (n/1000).toFixed(0)+'K';
+  return Math.round(n).toLocaleString();
+}
+function fmtGBP(n) { return '£'+Math.round(n).toLocaleString(); }
+
+function progRender() {
+  const pd = PROGRAMME_DATA;
+  const budget = progBudgets[progYear] || 0;
+  const showAll = document.getElementById('prog-view-sel')?.value === 'all';
+  let rows = getProgRows();
+
+  // Calculate cumulative cost and flag within/over budget
+  let cumCost = 0;
+  rows = rows.map(r => {
+    const prev = cumCost;
+    cumCost += r.total_cost || 0;
+    return {...r, cumCost, withinBudget: cumCost <= budget, partialBudget: prev < budget && cumCost > budget};
+  });
+
+  if(!showAll) rows = rows.filter(r => r.withinBudget || r.partialBudget);
+
+  const withinCost = rows.filter(r=>r.withinBudget).reduce((a,r)=>a+r.total_cost,0);
+  const overCost   = rows.filter(r=>!r.withinBudget && !r.partialBudget).reduce((a,r)=>a+r.total_cost,0);
+
+  // Budget status bar
+  const pct = budget > 0 ? Math.min(100, withinCost/budget*100) : 0;
+  const overBudget = withinCost > budget;
+  const statusEl = document.getElementById('prog-budget-status');
+  if(statusEl) statusEl.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="flex:1;max-width:300px;background:#e0e0e0;border-radius:4px;height:8px;overflow:hidden">
+        <div style="width:${pct}%;background:${overBudget?'var(--red)':'var(--green)'};height:100%"></div>
+      </div>
+      <span style="color:${overBudget?'var(--red)':'var(--green-dark)'}">
+        ${fmtGBP(withinCost)} of ${fmtGBP(budget)} budget used
+        ${overBudget?' — OVER BUDGET':budget>0?' ('+pct.toFixed(0)+'%)':''}
+      </span>
+    </div>`;
+
+  if(!rows.length) {
+    document.getElementById('prog-table').innerHTML =
+      '<p style="font-size:11px;color:var(--text-muted);padding:10px">No asset groups with works in this programme year.</p>';
+    return;
+  }
+
+  // Build component columns from all unique components in this year
+  const allComps = [...new Set(rows.flatMap(r => Object.keys(r.components||{})))].sort();
+
+  document.getElementById('prog-table').innerHTML = `
+    <table class="tbl">
+      <tr>
+        <th>Status</th>
+        <th>Asset Group</th>
+        <th>Props</th>
+        <th>Total Cost</th>
+        <th>Cumulative</th>
+        ${allComps.map(c=>`<th style="font-size:9px;max-width:60px;white-space:normal;text-align:center">${c}</th>`).join('')}
+      </tr>
+      ${rows.map(r => {
+        const status = r.withinBudget
+          ? '<span style="background:#D1FAE5;color:#065F46;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:700">✓ In budget</span>'
+          : r.partialBudget
+          ? '<span style="background:#FEF3C7;color:#92400E;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:700">⚠ Partial</span>'
+          : '<span style="background:#FEE2E2;color:#991B1B;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:700">✗ Over</span>';
+        const compCells = allComps.map(c => {
+          const cd = (r.components||{})[c];
+          if(!cd) return '<td style="text-align:center;color:#e0e0e0">—</td>';
+          return `<td style="text-align:center;font-size:10px">
+            <div style="font-weight:600">${cd.props} props</div>
+            <div style="color:var(--text-muted);font-size:9px">${fmtGBP(cd.total_cost)}</div>
+          </td>`;
+        }).join('');
+        return `<tr style="cursor:pointer" onclick="openProgDrill('${r.ag.replace(/'/g,"\'")}')">
+          <td>${status}</td>
+          <td style="font-size:10px;font-weight:600">${r.ag}</td>
+          <td style="text-align:center">${r.total_props}</td>
+          <td style="text-align:right;font-weight:700;color:${r.withinBudget?'var(--green-dark)':'var(--red)'}">${fmtGBP(r.total_cost)}</td>
+          <td style="text-align:right;font-size:10px;color:${r.cumCost<=budget?'var(--green)':'var(--red)'}">${fmtGBP(r.cumCost)}</td>
+          ${compCells}
+        </tr>`;
+      }).join('')}
+    </table>
+    <div style="font-size:10px;color:var(--text-muted);padding:4px">
+      ${rows.length} asset groups shown · sorted by RAG priority score ·
+      Components include those bundled forward within ${2} programme years ·
+      Click any row to see component details
+    </div>`;
+}
+
+function openProgDrill(ag) {
+  const pd = PROGRAMME_DATA;
+  const yrData = (pd.programme||{})[progYear] || {};
+  const agData = (yrData.ags||[]).find(r=>r.ag===ag);
+  if(!agData) return;
+
+  document.getElementById('prog-drill-title').textContent = ag;
+
+  const comps = agData.components || {};
+  const rows = Object.entries(comps).map(([comp, cd]) =>
+    `<tr>
+      <td style="font-size:10px;font-weight:600">${comp}</td>
+      <td style="text-align:center">${cd.props}</td>
+      <td style="text-align:right">${fmtGBP(cd.cost_per_prop)}</td>
+      <td style="text-align:right;font-weight:700">${fmtGBP(cd.total_cost)}</td>
+    </tr>`).join('');
+
+  document.getElementById('prog-drill-content').innerHTML = `
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:10px">
+      Programme year: <b>${progYear}</b> ·
+      Total properties: <b>${agData.total_props}</b> ·
+      Total cost: <b style="color:var(--green-dark)">${fmtGBP(agData.total_cost)}</b>
+    </div>
+    <table class="tbl" style="max-width:600px">
+      <tr><th>Component</th><th>Properties</th><th>Cost per Property</th><th>Total Cost</th></tr>
+      ${rows}
+      <tr style="background:#f0f7f0">
+        <td style="font-weight:700">TOTAL</td>
+        <td style="text-align:center;font-weight:700">${agData.total_props}</td>
+        <td></td>
+        <td style="text-align:right;font-weight:700;color:var(--green-dark)">${fmtGBP(agData.total_cost)}</td>
+      </tr>
+    </table>`;
+
+  document.getElementById('prog-drill').classList.add('open');
+  document.getElementById('prog-drill').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function closeProgDrill() {
+  document.getElementById('prog-drill').classList.remove('open');
+}
+
+function progExport() {
+  const pd = PROGRAMME_DATA;
+  const lines = ['Programme Year,Asset Group,Component,Properties,Cost per Property,Total Cost,Within Budget'];
+  (pd.years||[]).forEach(yr => {
+    const budget = progBudgets[yr] || 0;
+    let cum = 0;
+    ((pd.programme||{})[yr]?.ags||[]).forEach(r => {
+      cum += r.total_cost;
+      const wb = cum <= budget ? 'Yes' : 'No';
+      Object.entries(r.components||{}).forEach(([comp,cd]) => {
+        lines.push([yr, r.ag, comp, cd.props, cd.cost_per_prop, cd.total_cost, wb].join(','));
+      });
+    });
+  });
+  navigator.clipboard.writeText(lines.join('\n'))
+    .then(()=>alert('Programme exported to clipboard as CSV ('+lines.length+' rows)'))
+    .catch(()=>alert('Copy failed — try a different browser'));
+}
+
+
+// ════════════════════════════════════════════════════════
+// PAGE 7 — DECENT HOMES STANDARD
+// ════════════════════════════════════════════════════════
+
+let dhViewMode = 'ward', dhSearchVal2 = '', dhSortCol = 'pct_nd', dhSortDir = -1;
+
+const DH_CRITERIA = [
+  { key: 'c1', label: 'Criterion 1', name: 'HHSRS Hazards',
+    desc: 'Damp RAG Red or EPC F/G', col: '#C00000' },
+  { key: 'c2', label: 'Criterion 2', name: 'State of Repair',
+    desc: 'Key component overdue',   col: '#E36C09' },
+  { key: 'c3', label: 'Criterion 3', name: 'Modern Facilities',
+    desc: 'Kitchen/Bathroom age',    col: '#7C3AED' },
+  { key: 'c4', label: 'Criterion 4', name: 'Thermal Comfort',
+    desc: 'SAP < 35 or EPC F/G',    col: '#2563EB' },
+];
+
+function initDecentHomes() {
+  const dh = DECENT_HOMES;
+  if(!dh || !dh.summary) {
+    document.getElementById('dh-kpis').innerHTML =
+      '<p style="color:var(--text-muted);font-size:11px;padding:10px">No Decent Homes data — run build_portal.py locally.</p>';
+    return;
+  }
+
+  // Ward dropdown
+  const wards = Object.keys(dh.ward_data || {}).sort();
+  const sel = document.getElementById('dh-ward-sel');
+  wards.forEach(w => {
+    const o = document.createElement('option');
+    o.value = w; o.textContent = w;
+    sel.appendChild(o);
+  });
+
+  renderDhKpis();
+  renderDhCriteriaCards();
+  dhRender();
+}
+
+function renderDhKpis() {
+  const s = DECENT_HOMES.summary || {};
+  const total       = s.total || 0;
+  const totalResp   = s.total_resp || total;
+  const totalLease  = s.total_lease || 0;
+  const totalCouncil= s.total_council || 0;
+  const totalGFTA   = s.total_gfta || 0;
+  const nd          = s.non_decent || 0;
+  const pct         = s.pct_nd || 0;
+  const decent      = totalResp - nd;
+
+  document.getElementById('dh-kpis').innerHTML = [
+    { label: 'Total Stock',             val: total.toLocaleString(),        sub: 'all tenures', col: 'var(--green-dark)' },
+    { label: 'Council Owned',           val: totalCouncil.toLocaleString(), sub: 'council responsible', col: 'var(--green-dark)' },
+    { label: 'Leasehold',              val: totalLease.toLocaleString(),   sub: 'excluded from C2 & C3', col: '#888' },
+    { label: 'General Fund TA',        val: totalGFTA.toLocaleString(),    sub: 'included in assessment', col: 'var(--green-dark)' },
+    { label: 'Non-Decent (Responsible)',val: nd.toLocaleString(),          sub: `${pct}% of responsible stock`, col: 'var(--red)' },
+    { label: 'Decent (Responsible)',    val: decent.toLocaleString(),       sub: `${(100-pct).toFixed(1)}% of responsible stock`, col: 'var(--green)' },
+    { label: 'Fail Criterion 1',        val: (s.c1||0).toLocaleString(),   sub: 'HHSRS — all tenures', col: '#C00000' },
+    { label: 'Fail Criterion 2',        val: (s.c2||0).toLocaleString(),   sub: 'repair — excl. leasehold', col: '#E36C09' },
+    { label: 'Fail Criterion 3',        val: (s.c3||0).toLocaleString(),   sub: 'facilities — excl. leasehold', col: '#7C3AED' },
+    { label: 'Fail Criterion 4',        val: (s.c4||0).toLocaleString(),   sub: 'thermal — all tenures', col: '#2563EB' },
+  ].map(k => `<div class="kpi-card">
+    <div class="kpi-label">${k.label}</div>
+    <div class="kpi-val" style="color:${k.col}">${k.val}</div>
+    <div class="kpi-sub">${k.sub}</div>
+  </div>`).join('');
+
+  // Show tenure note
+  const noteEl = document.getElementById('dh-tenure-note');
+  if(noteEl) noteEl.innerHTML = `
+    <div style="background:#FFF3CD;border:1px solid #ffc107;border-radius:8px;padding:10px 14px;font-size:11px;color:#856404;margin-bottom:12px">
+      ⚠ <b>Tenure note:</b> Headline non-decent figures cover council-responsible stock only (${totalResp.toLocaleString()} properties).
+      Leasehold properties (${totalLease.toLocaleString()}) are excluded from Criteria 2 and 3 (internal components — kitchen, bathroom, boiler)
+      as the council is not responsible for internal repairs in leasehold properties.
+      Criteria 1 (HHSRS) and 4 (Thermal Comfort) apply to all tenures.
+    </div>`;
+}
+
+function renderDhCriteriaCards() {
+  const s = DECENT_HOMES.summary || {};
+  const total = s.total || 1;
+  document.getElementById('dh-criteria-cards').innerHTML = DH_CRITERIA.map(c => {
+    const n = s[c.key] || 0;
+    const pct = (n / total * 100).toFixed(1);
+    const barW = Math.min(100, n/total*100);
+    return `<div class="card" style="padding:14px;border-left:4px solid ${c.col}">
+      <div style="font-size:10px;font-weight:700;color:${c.col};text-transform:uppercase;letter-spacing:.05em">${c.label}</div>
+      <div style="font-size:13px;font-weight:700;margin:4px 0">${c.name}</div>
+      <div style="font-size:10px;color:var(--text-muted);margin-bottom:8px">${c.desc}</div>
+      <div style="font-size:22px;font-weight:700;color:${c.col}">${n.toLocaleString()}</div>
+      <div style="font-size:10px;color:var(--text-muted);margin-bottom:6px">${pct}% of stock</div>
+      <div style="background:#f0f0f0;border-radius:3px;height:6px;overflow:hidden">
+        <div style="width:${barW}%;background:${c.col};height:100%"></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function dhView(mode, el) {
+  dhViewMode = mode;
+  document.querySelectorAll('#page-decent .pill-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  const titles = { ward:'Non-Decent Homes by Ward', ag:'Non-Decent Homes by Asset Group',
+                   tenure:'Non-Decent Homes by Tenure', props:'Non-Decent Properties' };
+  document.getElementById('dh-table-title').textContent = titles[mode] || '';
+  dhRender();
+}
+function dhSearchFn(v) { dhSearchVal2 = v; dhRender(); }
+function dhSort(col) {
+  if(dhSortCol === col) dhSortDir *= -1; else { dhSortCol = col; dhSortDir = -1; }
+  dhRender();
+}
+
+function dhRender() {
+  const dh = DECENT_HOMES;
+  if(!dh || !dh.summary) return;
+
+  const ward = document.getElementById('dh-ward-sel')?.value || '';
+  const arrow = k => k===dhSortCol?(dhSortDir===-1?'▼':'▲'):'<span style="opacity:0.3">⇅</span>';
+  const pctBar = (n, t, col) => {
+    const w = t > 0 ? Math.min(100, n/t*100) : 0;
+    return `<div style="display:flex;align-items:center;gap:6px">
+      <div style="width:60px;background:#f0f0f0;border-radius:3px;height:8px;overflow:hidden">
+        <div style="width:${w}%;background:${col};height:100%"></div>
+      </div>
+      <span style="font-weight:700;color:${col}">${(w).toFixed(1)}%</span>
+    </div>`;
+  };
+
+  if(dhViewMode === 'tenure') {
+    const rows = Object.entries(dh.tenure_data || {})
+      .sort((a,b) => dhSortDir * (b[1].pct_nd - a[1].pct_nd));
+    document.getElementById('dh-table').innerHTML = `
+      <table class="tbl">
+        <tr>
+          <th onclick="dhSort('tenure')" style="cursor:pointer">Tenure ${arrow('tenure')}</th>
+          <th onclick="dhSort('total')" style="cursor:pointer;text-align:center">Total ${arrow('total')}</th>
+          <th onclick="dhSort('non_decent')" style="cursor:pointer;text-align:center">Non-Decent ${arrow('non_decent')}</th>
+          <th onclick="dhSort('pct_nd')" style="cursor:pointer">% Non-Decent ${arrow('pct_nd')}</th>
+          <th style="text-align:center">Decent</th>
+        </tr>
+        ${rows.map(([t, d]) => `<tr>
+          <td style="font-weight:600">${t}</td>
+          <td style="text-align:center">${d.total.toLocaleString()}</td>
+          <td style="text-align:center;font-weight:700;color:var(--red)">${d.non_decent.toLocaleString()}</td>
+          <td>${pctBar(d.non_decent, d.total, 'var(--red)')}</td>
+          <td style="text-align:center;color:var(--green)">${(d.total-d.non_decent).toLocaleString()}</td>
+        </tr>`).join('')}
+      </table>`;
+    return;
+  }
+
+  if(dhViewMode === 'props') {
+    let props = (dh.properties || []);
+    if(ward) props = props.filter(p => p.ward === ward);
+    if(dhSearchVal2) props = props.filter(p =>
+      (p.addr||'').toLowerCase().includes(dhSearchVal2.toLowerCase()) ||
+      (p.ag||'').toLowerCase().includes(dhSearchVal2.toLowerCase()));
+
+    const criteriaCell = (p) => DH_CRITERIA.map(c =>
+      p[c.key] ? `<span style="background:${c.col}22;color:${c.col};padding:1px 5px;border-radius:3px;font-size:9px;font-weight:700;margin-right:2px">${c.label}</span>` : ''
+    ).join('');
+
+    document.getElementById('dh-table').innerHTML = `
+      <table class="tbl">
+        <tr>
+          <th>Address</th><th>Ward</th><th>Asset Group</th>
+          <th>Tenure</th><th>EPC</th><th>SAP</th><th>Failures</th>
+        </tr>
+        ${props.slice(0,500).map(p => `<tr>
+          <td style="font-size:10px;font-weight:600">${p.addr||'—'}</td>
+          <td style="font-size:10px">${p.ward||'—'}</td>
+          <td style="font-size:9px;color:var(--text-muted)">${p.ag||'—'}</td>
+          <td style="font-size:10px">${p.tenure||'—'}${p.is_lease?'<span style="background:#f0f0f0;color:#888;padding:1px 5px;border-radius:3px;font-size:9px;margin-left:4px">excl. C2/C3</span>':''}</td>
+          <td style="text-align:center">
+            ${p.epc?`<span style="background:${{A:'#1B5E45',B:'#4CAF50',C:'#8BC34A',D:'#FFC107',E:'#FF9800',F:'#F44336',G:'#B71C1C'}[p.epc]||'#aaa'};color:#fff;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:700">${p.epc}</span>`:'—'}
+          </td>
+          <td style="text-align:center;font-size:10px;color:${(p.sap||99)<35?'var(--red)':'var(--text-muted)'}">${p.sap||'—'}</td>
+          <td>${criteriaCell(p)}</td>
+        </tr>`).join('')}
+      </table>
+      <div style="font-size:10px;color:var(--text-muted);padding:4px">
+        Showing ${Math.min(500,props.length)} of ${props.length.toLocaleString()} non-decent properties
+      </div>`;
+    return;
+  }
+
+  // Ward or AG view
+  const dataKey  = dhViewMode === 'ward' ? 'ward_data' : 'ag_data';
+  let rows = Object.entries(dh[dataKey] || {});
+  if(ward && dhViewMode === 'ag') {
+    // Filter AGs by ward using DATA
+    const agWards = {};
+    (DATA||[]).forEach(r => agWards[r['Asset Group']] = r.ward);
+    rows = rows.filter(([ag]) => agWards[ag] === ward);
+  }
+  if(dhSearchVal2) rows = rows.filter(([k]) =>
+    k.toLowerCase().includes(dhSearchVal2.toLowerCase()));
+  rows = rows.sort((a,b) => {
+    const va = dhSortCol === 'name' ? a[0] : (a[1][dhSortCol]||0);
+    const vb = dhSortCol === 'name' ? b[0] : (b[1][dhSortCol]||0);
+    return dhSortDir * (typeof va==='string' ? va.localeCompare(vb) : vb-va);
+  });
+
+  const label = dhViewMode === 'ward' ? 'Ward' : 'Asset Group';
+  document.getElementById('dh-table').innerHTML = `
+    <table class="tbl">
+      <tr>
+        <th onclick="dhSort('name')" style="cursor:pointer">${label} ${arrow('name')}</th>
+        <th onclick="dhSort('total')" style="cursor:pointer;text-align:center">Total ${arrow('total')}</th>
+        <th onclick="dhSort('non_decent')" style="cursor:pointer;text-align:center">Non-Decent ${arrow('non_decent')}</th>
+        <th onclick="dhSort('pct_nd')" style="cursor:pointer">% Non-Decent ${arrow('pct_nd')}</th>
+        <th onclick="dhSort('c1')" style="cursor:pointer;text-align:center;color:#C00000">C1 ${arrow('c1')}</th>
+        <th onclick="dhSort('c2')" style="cursor:pointer;text-align:center;color:#E36C09">C2 ${arrow('c2')}</th>
+        <th onclick="dhSort('c3')" style="cursor:pointer;text-align:center;color:#7C3AED">C3 ${arrow('c3')}</th>
+        <th onclick="dhSort('c4')" style="cursor:pointer;text-align:center;color:#2563EB">C4 ${arrow('c4')}</th>
+        <th style="text-align:center">Decent</th>
+      </tr>
+      ${rows.map(([name, d]) => `
+        <tr style="cursor:pointer" onclick="openDhDrill('${name.replace(/'/g,"\'")}','${dhViewMode}')">
+          <td style="font-size:${dhViewMode==='ag'?'10px':'11px'};font-weight:600">${name}</td>
+          <td style="text-align:center">${d.total.toLocaleString()}</td>
+          <td style="text-align:center;font-weight:700;color:${d.non_decent>0?'var(--red)':'var(--green)'}">${d.non_decent.toLocaleString()}</td>
+          <td>${pctBar(d.non_decent, d.total, d.pct_nd>30?'var(--red)':d.pct_nd>15?'var(--amber-dark)':'var(--green)')}</td>
+          <td style="text-align:center;color:#C00000">${d.c1||0}</td>
+          <td style="text-align:center;color:#E36C09">${d.c2||0}</td>
+          <td style="text-align:center;color:#7C3AED">${d.c3||0}</td>
+          <td style="text-align:center;color:#2563EB">${d.c4||0}</td>
+          <td style="text-align:center;color:var(--green)">${(d.total-d.non_decent).toLocaleString()}</td>
+        </tr>`).join('')}
+    </table>
+    <div style="font-size:10px;color:var(--text-muted);padding:4px">
+      ${rows.length} ${dhViewMode === 'ward' ? 'wards' : 'asset groups'} · C1=HHSRS · C2=Repair · C3=Modern · C4=Thermal
+    </div>`;
+}
+
+function openDhDrill(name, mode) {
+  const dh = DECENT_HOMES;
+  const dataKey = mode === 'ward' ? 'ward_data' : 'ag_data';
+  const d = (dh[dataKey]||{})[name];
+  if(!d) return;
+
+  document.getElementById('dh-drill-title').textContent = name;
+  document.getElementById('dh-drill-meta').innerHTML =
+    `Total: <b>${d.total}</b> · Non-Decent: <b style="color:var(--red)">${d.non_decent}</b> · ` +
+    `<b>${d.pct_nd}%</b> non-decent · ` +
+    `C1: <b style="color:#C00000">${d.c1}</b> · ` +
+    `C2: <b style="color:#E36C09">${d.c2}</b> · ` +
+    `C3: <b style="color:#7C3AED">${d.c3}</b> · ` +
+    `C4: <b style="color:#2563EB">${d.c4}</b>`;
+
+  // Show properties for this ward/AG
+  let props = (dh.properties||[]).filter(p =>
+    mode === 'ward' ? p.ward === name : p.ag === name);
+
+  const criteriaCell = (p) => DH_CRITERIA.map(c =>
+    p[c.key] ? `<span style="background:${c.col}22;color:${c.col};padding:1px 5px;border-radius:3px;font-size:9px;font-weight:700;margin-right:2px">${c.label}</span>` : ''
+  ).join('');
+
+  document.getElementById('dh-drill-table').innerHTML = props.length === 0
+    ? '<p style="font-size:11px;color:var(--text-muted);padding:8px">No non-decent properties in this ' + mode + '.</p>'
+    : `<table class="tbl">
+        <tr><th>Address</th><th>Postcode</th><th>Tenure</th><th>EPC</th><th>SAP</th><th>Failures</th></tr>
+        ${props.map((p,pi) => {
+          const detailId = 'dh-prop-detail-'+pi;
+          const EPC_COLS = {A:'#1B5E45',B:'#4CAF50',C:'#8BC34A',D:'#FFC107',E:'#FF9800',F:'#F44336',G:'#B71C1C'};
+          const CURR = 2025;
+          const fmtYr = yr => yr ? `<span style="color:${yr<CURR?'var(--red)':yr<=2030?'var(--amber-dark)':'var(--green)'};font-weight:600">${yr}${yr<CURR?' (overdue)':''}</span>` : '<span style="color:#ccc">No survey data</span>';
+
+          // Build criterion detail HTML
+          let detail = '<div style="padding:10px 14px;background:#F8FBF9;border-top:1px solid #e0f0e8;font-size:11px">';
+
+          if(p.c1) {
+            detail += '<div style="margin-bottom:8px"><div style="font-weight:700;color:#C00000;margin-bottom:4px">&#9679; Criterion 1 — HHSRS Hazard</div><div style="padding-left:12px;color:var(--text-muted)">';
+            if(p.c1_damp) detail += '<div>&#8226; Damp RAG = <b style="color:var(--red)">Red</b> — active damp or mould issue confirmed by repair history or surveyor assessment</div>';
+            if(p.c1_cold) detail += `<div>&#8226; EPC rating <b>${p.epc||'unknown'}</b> — excess cold risk (EPC F or G fails HHSRS)</div>`;
+            detail += '</div></div>';
+          }
+
+          if(p.c2) {
+            detail += '<div style="margin-bottom:8px"><div style="font-weight:700;color:#E36C09;margin-bottom:4px">&#9679; Criterion 2 — State of Repair</div><div style="padding-left:12px;color:var(--text-muted)">';
+            const c2comps = [
+              {label:'Window Type',          yr:p.win_due},
+              {label:'Front Entrance Door',  yr:p.door_due},
+              {label:'Roof Covering',        yr:p.roof_due},
+              {label:'Primary Heating',      yr:p.heat_due},
+              {label:'Wiring',               yr:p.wire_due},
+              {label:'External Wall Finish', yr:p.wall_due},
+            ].filter(c => c.yr && c.yr < CURR);
+            if(c2comps.length > 0) {
+              c2comps.forEach(c => {
+                detail += `<div>&#8226; <b>${c.label}:</b> Year Due ${fmtYr(c.yr)}</div>`;
+              });
+            } else {
+              detail += '<div>&#8226; One or more components overdue (survey data incomplete)</div>';
+            }
+            detail += '</div></div>';
+          }
+
+          if(p.c3) {
+            detail += '<div style="margin-bottom:8px"><div style="font-weight:700;color:#7C3AED;margin-bottom:4px">&#9679; Criterion 3 — Modern Facilities</div><div style="padding-left:12px;color:var(--text-muted)">';
+            if(p.c3_kit && p.kit_due) {
+              const kitAge = CURR - (p.kit_due - 20);
+              detail += `<div>&#8226; <b>Kitchen:</b> Year Due ${fmtYr(p.kit_due)} — estimated age <b>${kitAge} years</b> (threshold: 20 years)</div>`;
+            } else if(p.c3_kit) {
+              detail += '<div>&#8226; <b>Kitchen:</b> estimated over 20 years old</div>';
+            }
+            if(p.c3_bath && p.bath_due) {
+              const bathAge = CURR - (p.bath_due - 30);
+              detail += `<div>&#8226; <b>Bathroom:</b> Year Due ${fmtYr(p.bath_due)} — estimated age <b>${bathAge} years</b> (threshold: 30 years)</div>`;
+            } else if(p.c3_bath) {
+              detail += '<div>&#8226; <b>Bathroom:</b> estimated over 30 years old</div>';
+            }
+            detail += '</div></div>';
+          }
+
+          if(p.c4) {
+            detail += '<div style="margin-bottom:4px"><div style="font-weight:700;color:#2563EB;margin-bottom:4px">&#9679; Criterion 4 — Thermal Comfort</div><div style="padding-left:12px;color:var(--text-muted)">';
+            if(p.sap && p.sap < 35) detail += `<div>&#8226; SAP score <b style="color:var(--red)">${p.sap}</b> — below threshold of 35</div>`;
+            if(p.epc && ['F','G'].includes(p.epc)) detail += `<div>&#8226; EPC rating <b>${p.epc}</b> — very poor thermal performance</div>`;
+            if(p.heat_due && p.heat_due < CURR) detail += `<div>&#8226; Primary heating overdue: Year Due ${fmtYr(p.heat_due)}</div>`;
+            if(!p.sap && !(['F','G'].includes(p.epc||'')) && !(p.heat_due && p.heat_due < CURR)) {
+              detail += '<div>&#8226; Thermal comfort issue identified (survey data may be incomplete)</div>';
+            }
+            detail += '</div></div>';
+          }
+
+          detail += '</div>';
+
+          return `<tr style="cursor:pointer" onclick="document.getElementById('${detailId}').style.display=document.getElementById('${detailId}').style.display==='none'?'table-row':'none'">
+            <td style="font-size:10px;font-weight:600">${p.addr||'—'} <span style="color:var(--green-dark);font-size:9px">&#9660;</span></td>
+            <td style="font-size:10px">${p.post||'—'}</td>
+            <td style="font-size:10px">${p.tenure||'—'}${p.is_lease?'<span style="background:#f0f0f0;color:#888;padding:1px 5px;border-radius:3px;font-size:9px;margin-left:4px">excl. C2/C3</span>':''}</td>
+            <td style="text-align:center">
+              ${p.epc?`<span style="background:${EPC_COLS[p.epc]||'#aaa'};color:#fff;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:700">${p.epc}</span>`:'—'}
+            </td>
+            <td style="text-align:center;font-size:10px;color:${(p.sap||99)<35?'var(--red)':'var(--text-muted)'}">${p.sap||'—'}</td>
+            <td>${criteriaCell(p)}</td>
+          </tr>
+          <tr id="${detailId}" style="display:none">
+            <td colspan="6" style="padding:0">${detail}</td>
+          </tr>`;
+        }).join('')}
+      </table>
+      <div style="font-size:10px;color:var(--text-muted);padding:4px">${props.length} non-decent properties</div>`;
+
+  document.getElementById('dh-drill').classList.add('open');
+  document.getElementById('dh-drill').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function closeDhDrill() {
+  document.getElementById('dh-drill').classList.remove('open');
+}
+
+function dhExportLAHS() {
+  const dh = DECENT_HOMES;
+  const s = dh.summary || {};
+  const lines = [
+    'HOME BY HOME PLAN — DECENT HOMES ASSESSMENT',
+    `Assessment Year: ${s.assessment_year || 2025}`,
+    '',
+    'LAHS RETURN — KEY FIGURES',
+    `Total dwellings (all tenures),${s.total||0}`,
+    `Council owned,${s.total_council||0}`,
+    `Leasehold (excluded from C2/C3),${s.total_lease||0}`,
+    `General Fund TA,${s.total_gfta||0}`,
+    `Council-responsible stock,${s.total_resp||0}`,
+    `Non-decent homes (responsible stock),${s.non_decent||0}`,
+    `% non-decent (responsible stock),${s.pct_nd||0}%`,
+    `Fail Criterion 1 (HHSRS),${s.c1||0}`,
+    `Fail Criterion 2 (State of Repair),${s.c2||0}`,
+    `Fail Criterion 3 (Modern Facilities),${s.c3||0}`,
+    `Fail Criterion 4 (Thermal Comfort),${s.c4||0}`,
+    '',
+    'BY TENURE',
+    'Tenure,Total,Non-Decent,% Non-Decent',
+    ...Object.entries(dh.tenure_data||{}).map(([t,d])=>`${t},${d.total},${d.non_decent},${d.pct_nd}%`),
+    '',
+    'BY WARD',
+    'Ward,Total,Non-Decent,% Non-Decent,C1,C2,C3,C4',
+    ...Object.entries(dh.ward_data||{}).sort((a,b)=>b[1].non_decent-a[1].non_decent)
+      .map(([w,d])=>`${w},${d.total},${d.non_decent},${d.pct_nd}%,${d.c1},${d.c2},${d.c3},${d.c4}`),
+    '',
+    'NON-DECENT PROPERTIES',
+    'UPRN,Address,Postcode,Ward,Asset Group,Tenure,EPC,SAP,C1,C2,C3,C4',
+    ...(dh.properties||[]).map(p =>
+      `${p.uprn},${p.addr},${p.post||''},${p.ward||''},${p.ag||''},${p.tenure||''},${p.epc||''},${p.sap||''},${p.c1?'FAIL':''},${p.c2?'FAIL':''},${p.c3?'FAIL':''},${p.c4?'FAIL':''}`)
+  ];
+  navigator.clipboard.writeText(lines.join('\n'))
+    .then(()=>alert('LAHS return exported to clipboard (' + lines.length + ' rows) — paste into Excel'))
+    .catch(()=>alert('Copy failed — try a different browser'));
+}
+
+
+function renderOvTop10() {
+  const rows = TOP10_WORST || [];
+  const el = document.getElementById('ov-top10-table');
+  if(!el) return;
+  if(!rows.length) {
+    el.innerHTML = '<p style="font-size:11px;color:var(--text-muted);padding:10px">No data — run build_portal.py locally.</p>';
+    return;
+  }
+  const ragDot = r => r==='Red'?'<span style="color:var(--red)">&#9679;</span>':
+                      r==='Amber'?'<span style="color:var(--amber-dark)">&#9679;</span>':
+                      '<span style="color:var(--green)">&#9679;</span>';
+  const dampCol = d => d>=5?'var(--red)':d>=3?'var(--amber-dark)':'var(--text-muted)';
+
+  el.innerHTML = `
+    <table class="tbl">
+      <tr>
+        <th>Rank</th><th>Address</th><th>Asset Group</th><th>Ward</th>
+        <th>Damp Repairs</th><th>Total Repairs</th>
+        <th>Roof</th><th>Window</th><th>Kitchen</th><th>Bathroom</th><th>Electrical</th><th>Heating</th>
+        <th>Damp RAG</th><th>Bath RAG</th><th>Kit RAG</th>
+      </tr>
+      ${rows.map((r,i) => `<tr style="cursor:pointer" onclick="showPage('damp',document.querySelector('[onclick*=damp]'));setTimeout(()=>openDampDrill('${r.ag.replace(/'/g,"\'")}'),300)">
+        <td style="text-align:center;font-weight:700;color:var(--green-dark)">#${i+1}</td>
+        <td style="font-size:10px;font-weight:600">${r.addr}</td>
+        <td style="font-size:9px;color:var(--text-muted)">${r.ag}</td>
+        <td style="font-size:10px">${r.ward||'—'}</td>
+        <td style="text-align:center;font-weight:700;color:${dampCol(r.damp)}">${r.damp}</td>
+        <td style="text-align:center;font-size:10px">${r.total}</td>
+        <td style="text-align:center;font-size:10px;color:var(--text-muted)">${r.roof_r||0}</td>
+        <td style="text-align:center;font-size:10px;color:var(--text-muted)">${r.win_r||0}</td>
+        <td style="text-align:center;font-size:10px;color:var(--text-muted)">${r.kit_r||0}</td>
+        <td style="text-align:center;font-size:10px;color:var(--text-muted)">${r.bath_r||0}</td>
+        <td style="text-align:center;font-size:10px;color:var(--text-muted)">${r.elec_r||0}</td>
+        <td style="text-align:center;font-size:10px;color:var(--text-muted)">${r.heat_r||0}</td>
+        <td style="text-align:center">${ragDot(r.damp_rag)} ${r.damp_rag}</td>
+        <td style="text-align:center">${ragDot(r.bath_rag)} ${r.bath_rag}</td>
+        <td style="text-align:center">${ragDot(r.kit_rag)} ${r.kit_rag}</td>
+      </tr>`).join('')}
+    </table>
+    <div style="font-size:10px;color:var(--text-muted);padding:4px">
+      Click any row to view asset group on damp page
+    </div>`;
+}
+
+
+// ── Overview page cost table ──────────────────────────────────────────────────
+let ovCostSearchVal = '';
+
+function initOvCostTable() {
+  const wards = [...new Set(DATA.map(r=>r.ward).filter(Boolean))].sort();
+  const sel = document.getElementById('ov-cost-ward');
+  if(sel && sel.options.length <= 1) {
+    wards.forEach(w => {
+      const o = document.createElement('option');
+      o.value = w; o.textContent = w;
+      sel.appendChild(o);
+    });
+  }
+  renderOvCostTable();
+}
+
+function ovCostSearch(v) { ovCostSearchVal = v; renderOvCostTable(); }
+
+function renderOvCostTable() {
+  const ward = document.getElementById('ov-cost-ward')?.value || '';
+  const search = ovCostSearchVal.toLowerCase();
+
+  const CATS = [
+    {key:'cost_roof',             label:'Roof',       col:'#7B3F00'},
+    {key:'cost_window',           label:'Door/Window',col:'#2563EB'},
+    {key:'cost_kitchen',          label:'Kitchen',    col:'#059669'},
+    {key:'cost_bathroom',         label:'Bathroom',   col:'#7C3AED'},
+    {key:'cost_electrical',       label:'Electrical', col:'#D97706'},
+    {key:'cost_communal_heating', label:'Heating',    col:'#E53E3E'},
+    {key:'cost_damp_mould',       label:'Damp/Leak',  col:'#0891B2'},
+    {key:'cost_other',            label:'Other',      col:'#888'},
+    {key:'total_repair_cost',     label:'TOTAL',      col:'#035341'},
+  ];
+
+  let rows = DATA.filter(r => {
+    if(ward && r.ward !== ward) return false;
+    if(search && !r['Asset Group']?.toLowerCase().includes(search)) return false;
+    return true;
+  }).sort((a,b) => (b.total_repair_cost||0) - (a.total_repair_cost||0));
+
+  const fmtGBP = v => v > 0 ? '£' + Math.round(v).toLocaleString() : '—';
+  const totalRow = {};
+  CATS.forEach(c => totalRow[c.key] = rows.reduce((s,r)=>s+(r[c.key]||0),0));
+
+  const el = document.getElementById('ov-cost-table');
+  if(!el) return;
+  el.innerHTML = `
+    <table class="tbl">
+      <tr>
+        <th>Asset Group</th><th>Ward</th><th>Props</th>
+        ${CATS.map(c=>`<th style="text-align:right;color:${c.col==='#035341'?'var(--green-dark)':c.col};white-space:nowrap">${c.label}</th>`).join('')}
+      </tr>
+      <tr style="background:#E8F5F0;font-weight:700">
+        <td colspan="3" style="font-weight:700;color:var(--green-dark)">TOTAL — all asset groups</td>
+        ${CATS.map(c=>`<td style="text-align:right;font-weight:700;color:${c.col==='#035341'?'var(--green-dark)':c.col}">${fmtGBP(totalRow[c.key])}</td>`).join('')}
+      </tr>
+      ${rows.map(r=>`<tr>
+        <td style="font-size:10px;font-weight:600">${r['Asset Group']}</td>
+        <td style="font-size:10px;color:var(--text-muted)">${r.ward||'—'}</td>
+        <td style="text-align:center">${r['Property Count']||0}</td>
+        ${CATS.map(c=>{
+          const v = r[c.key]||0;
+          const isTot = c.key==='total_repair_cost';
+          return `<td style="text-align:right;font-size:10px;font-weight:${isTot?'700':'400'};color:${isTot?'var(--green-dark)':v>0?c.col:'#ddd'}">${fmtGBP(v)}</td>`;
+        }).join('')}
+      </tr>`).join('')}
+    </table>
+    <div style="font-size:10px;color:var(--text-muted);padding:4px">
+      ${rows.length} asset groups · sorted by total repair cost · April 2023 – March 2026
+    </div>`;
+}
+
+</script>
+</body>
+</html>
